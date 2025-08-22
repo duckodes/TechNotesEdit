@@ -1,0 +1,623 @@
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js";
+import { signInWithEmailAndPassword, signOut, updatePassword } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
+import { getDatabase, ref, get, set } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-database.js";
+import fetcher from "./fetcher.js";
+import textareaUtils from "./textarea.utils.js";
+import timer from "./timer.js";
+
+const main = (async () => {
+    const firebaseConfig = await fetcher.load('../res/config/firebaseConfig.json');
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const database = getDatabase(app);
+
+    const techNotes = await get(ref(database, 'technotes'));
+    const dbEditor = document.getElementById('dbEditor');
+    const manualEditor = document.getElementById('manualEditor');
+    const addEntryBtn = document.getElementById('addEntryBtn');
+    let data = !techNotes.val() ? {
+        '無資料': [
+            // {
+            //     title: '標題',
+            //     summary: '總結',
+            //     content: '內容',
+            //     images: [
+            //         'https://www.duckode.com/img/duck/duck_192x_144p.png',
+            //         'https://www.duckode.com/img/duck/duck_500x_144p.png'
+            //     ],
+            //     date: Date.now()
+            // }
+        ]
+    } : techNotes.val();
+
+    async function updateData() {
+        const techNotes = await get(ref(database, 'technotes'));
+        data = techNotes.val();
+    }
+
+    onAuthStateChanged(auth, async (user) => {
+        if (!user) {
+            createLogin();
+        } else {
+            renderDBEditor();
+            renderManualEditor();
+            renderChangePassword();
+        }
+    });
+    function createLogin() {
+        const container = document.createElement('div');
+        container.className = 'login-container';
+
+        const title = document.createElement('h3');
+        title.textContent = '登入';
+        container.appendChild(title);
+
+        const usernameLabel = document.createElement('label');
+        usernameLabel.textContent = '帳號';
+        container.appendChild(usernameLabel);
+
+        const usernameInput = document.createElement('input');
+        usernameInput.type = 'text';
+        usernameInput.placeholder = '輸入帳號';
+        container.appendChild(usernameInput);
+
+        const passwordLabel = document.createElement('label');
+        passwordLabel.textContent = '密碼';
+        container.appendChild(passwordLabel);
+
+        const passwordInput = document.createElement('input');
+        passwordInput.type = 'password';
+        passwordInput.placeholder = '輸入密碼';
+        container.appendChild(passwordInput);
+
+        const button = document.createElement('button');
+        button.textContent = '顯示輸入內容';
+        container.appendChild(button);
+
+        button.onclick = () => {
+            const email = usernameInput.value;
+            const password = passwordInput.value;
+            signInWithEmailAndPassword(auth, email, password)
+                .then((userCredential) => {
+                    const user = userCredential.user;
+                    if (user) {
+                        location.reload();
+                    }
+                })
+                .catch((error) => {
+                    const errorCode = error.code;
+                    console.log(errorCode);
+                });
+        };
+
+        document.body.appendChild(container);
+    }
+
+    await timer.delay(500);
+
+    if (auth.currentUser) {
+        const button = document.createElement('button');
+        button.textContent = '登出';
+        document.body.appendChild(button);
+        button.addEventListener('click', () => {
+            signOut(auth)
+                .catch((error) => {
+                    console.log(error);
+                });
+            location.reload();
+        });
+    }
+
+    function createEntryUI(item, container, isFromDB = false, index = null, category = null) {
+        const entry = document.createElement('div');
+        entry.className = 'entry';
+
+        entry.innerHTML = `
+            <div class="date">分類: ${category} 第${index}筆資料</div>
+            <br>
+            
+            <label>標題</label>
+            <input type="text" value="${item.title}"><br>
+
+            <label>總結</label>
+            <textarea rows="2">${item.summary}</textarea><br>
+
+            <label>內容</label>
+            <textarea rows="4">${item.content}</textarea><br>
+
+            <label>圖片連結</label>
+            <div class="imageInputs"></div>
+            <button class="addImageBtn">新增圖片</button><br>
+            <label>上傳圖片</label>
+            <input type="file" id="fileInput" accept="image/*" />
+
+            <div class="images"></div>
+
+            <div class="date">日期：${new Date(Number(item.date)).toLocaleString()}</div>
+
+            <button class="code-space">插入代碼框架</button>
+            <button class="a-space">插入超連結框架</button>
+            <button class="delete">刪除文章</button>
+            <select class="recategory" style="margin-right: 10px;"></select>
+        `;
+
+        const fileInput = entry.querySelector('#fileInput');
+        fileInput.onchange = async (e) => {
+            const file = e.target.files[0];
+            await uploadImages(file);
+        };
+
+        const recategory = entry.querySelector('.recategory');
+        Object.keys(data).forEach(dataCategory => {
+            const option = document.createElement('option');
+            option.value = dataCategory;
+            option.textContent = dataCategory;
+            if (dataCategory === category) {
+                option.selected = true;
+            }
+            recategory.appendChild(option);
+        });
+
+        if (isFromDB) {
+            renderUploadBtn('更新', `確認更新資料\n類別: ${category}\n序列${index}\n\n標題: ${data[category][index].title}`);
+        } else {
+            renderUploadBtn('上傳', `確認上傳資料\n類別: ${category}\n序列${index}\n\n標題: ${data[category][index].title}`);
+        }
+        function renderUploadBtn(btnTextContent, confirmText) {
+            const uploadSingleBtn = document.createElement('button');
+            uploadSingleBtn.textContent = btnTextContent;
+            uploadSingleBtn.style.marginTop = '10px';
+            uploadSingleBtn.onclick = async () => {
+                const titleInput = entry.querySelector('input[type="text"]');
+                const summaryTextarea = entry.querySelectorAll('textarea')[0];
+                const contentTextarea = entry.querySelectorAll('textarea')[1];
+                const imageInputs = entry.querySelectorAll('.imageInputs input');
+
+                data[category][index].title = titleInput.value;
+                data[category][index].summary = summaryTextarea.value;
+                data[category][index].content = contentTextarea.value;
+                data[category][index].images = Array.from(imageInputs).map(input => `https://duckodes.github.io/TechNotesPicture/${auth.currentUser.uid}/` + input.value);
+
+                if (confirm(confirmText)) {
+                    try {
+                        async function moveNote(category, recategory, index) {
+                            const noteToMove = data[category][index];
+
+                            const categoryRef = ref(database, `technotes/${category}`);
+                            const snapshot = await get(categoryRef);
+                            if (snapshot.exists()) {
+                                const notesArray = Object.values(snapshot.val());
+                                notesArray.splice(index, 1);
+                                await set(categoryRef, notesArray);
+                            }
+
+                            const targetRef = ref(database, `technotes/${recategory}`);
+                            const targetSnapshot = await get(targetRef);
+                            const nextIndex = targetSnapshot.exists() ? Object.keys(targetSnapshot.val()).length : 0;
+
+                            await set(ref(database, `technotes/${recategory}/${nextIndex}`), noteToMove);
+                        }
+                        if (recategory.value !== category) {
+                            await moveNote(category, recategory.value, index);
+                        } else {
+                            await set(ref(database, `technotes/${category}/${index}`), data[category][index]);
+                        }
+                        dbEditor.innerHTML = '';
+                        manualEditor.innerHTML = '';
+                    } catch (error) {
+                        alert("上傳失敗:" + error);
+                        return;
+                    }
+                    await updateData();
+                    renderDBEditor();
+                    renderManualEditor();
+                    console.log(`已更新 ${category} ${index}：`, data[category][index]);
+                }
+            };
+            entry.appendChild(uploadSingleBtn);
+        }
+
+        container.appendChild(entry);
+
+        const entryTextareas = entry.querySelectorAll("textarea");
+        entryTextareas.forEach(textareaUtils.autoResizeTextarea);
+
+        const entryDelete = entry.querySelector('.delete');
+        entryDelete.onclick = async () => {
+            if (confirm(`即將刪除資料\n類別: ${category}\n序列${index}\n\n標題: ${data[category][index].title}`)) {
+                async function deleteNote(category, index) {
+                    const categoryRef = ref(database, `technotes/${category}`);
+                    const snapshot = await get(categoryRef);
+                    if (snapshot.exists()) {
+                        const notesArray = Object.values(snapshot.val());
+                        notesArray.splice(index, 1);
+                        await set(categoryRef, notesArray);
+                    }
+                }
+                dbEditor.innerHTML = '';
+                manualEditor.innerHTML = '';
+                await deleteNote(category, index);
+                await updateData();
+                renderDBEditor();
+                renderManualEditor();
+            }
+        };
+
+        const entryCodeSpace = entry.querySelector('.code-space');
+        let lastFocusedInput = null;
+        document.addEventListener('focusin', (e) => {
+            if (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT') {
+                lastFocusedInput = e.target;
+            }
+        });
+        document.addEventListener('focusout', (e) => {
+            setTimeout(() => {
+                if (!document.activeElement || document.activeElement === document.body) {
+                    lastFocusedInput = null;
+                }
+            }, 0);
+        });
+
+        entryCodeSpace.onclick = (e) => {
+            e.preventDefault();
+
+            if (lastFocusedInput) {
+                const insertText = '<pre><code>請放入代碼</code></pre>';
+                const start = lastFocusedInput.selectionStart;
+                const end = lastFocusedInput.selectionEnd;
+                const originalText = lastFocusedInput.value;
+
+                lastFocusedInput.value = originalText.slice(0, start) + insertText + originalText.slice(end);
+                lastFocusedInput.focus();
+                lastFocusedInput.setSelectionRange(start + 11, start + insertText.length - 13);
+
+            }
+
+        };
+
+        const entryASpace = entry.querySelector('.a-space');
+        entryASpace.onclick = (e) => {
+            e.preventDefault();
+
+            if (lastFocusedInput) {
+                const insertText = '<a href="放入超連結" target="_blank">超連結名稱</a>';
+                const start = lastFocusedInput.selectionStart;
+                const end = lastFocusedInput.selectionEnd;
+                const originalText = lastFocusedInput.value;
+
+                lastFocusedInput.value = originalText.slice(0, start) + insertText + originalText.slice(end);
+                lastFocusedInput.focus();
+                lastFocusedInput.setSelectionRange(start + 9, start + insertText.length - 27);
+
+            }
+
+        };
+
+        const imageInputsDiv = entry.querySelector('.imageInputs');
+        const imagePreviewDiv = entry.querySelector('.images');
+        const addImageBtn = entry.querySelector('.addImageBtn');
+
+        function renderImages() {
+            imageInputsDiv.innerHTML = '';
+            imagePreviewDiv.innerHTML = '';
+
+            item.images?.forEach(async (url, i) => {
+                const selectImage = document.createElement('select');
+                selectImage.style.marginRight = '10px';
+                const defaultOption = document.createElement('option');
+                defaultOption.value = '';
+                defaultOption.textContent = '請選擇圖片';
+                selectImage.appendChild(defaultOption);
+                const dataImages = await getImageFiles();
+                Object.values(dataImages).forEach(dataImage => {
+                    const option = document.createElement('option');
+                    option.value = dataImage;
+                    option.textContent = dataImage;
+                    if (dataImage === url.replace(`https://duckodes.github.io/TechNotesPicture/${auth.currentUser.uid}/`, '')) {
+                        option.selected = true;
+                    }
+                    selectImage.appendChild(option);
+                });
+                selectImage.onchange = () => {
+                    input.value = selectImage.value;
+                    item.images[i] = `https://duckodes.github.io/TechNotesPicture/${auth.currentUser.uid}/` + input.value;
+                    renderImages();
+                };
+
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.style.display = 'none';
+                input.value = url.replace(`https://duckodes.github.io/TechNotesPicture/${auth.currentUser.uid}/`, '');
+                input.style.width = '80%';
+                input.onchange = () => {
+                    item.images[i] = input.value;
+                    renderImages();
+                };
+
+                const img = document.createElement('img');
+                img.src = url;
+                img.alt = `圖片${i + 1}`;
+                img.style.height = '60px';
+                img.style.marginLeft = '10px';
+
+                const removeBtn = document.createElement('button');
+                removeBtn.textContent = '刪除';
+                removeBtn.onclick = () => {
+                    item.images.splice(i, 1);
+                    renderImages();
+                    deleteFileFromGitHub(url.replace(`https://duckodes.github.io/TechNotesPicture/${auth.currentUser.uid}/`, ''));
+                };
+
+                const wrapper = document.createElement('div');
+                wrapper.style.marginBottom = '10px';
+                wrapper.appendChild(selectImage);
+                wrapper.appendChild(input);
+                wrapper.appendChild(img);
+                wrapper.appendChild(removeBtn);
+
+                imageInputsDiv.appendChild(wrapper);
+                imagePreviewDiv.appendChild(img.cloneNode());
+            });
+        }
+
+        addImageBtn.onclick = () => {
+            (item.images ??= []).push('');
+            renderImages();
+        };
+
+        renderImages();
+    }
+
+    function renderDBEditor() {
+        dbEditor.innerHTML = '';
+
+        Object.entries(data).forEach(([category, items]) => {
+            const categoryTitle = document.createElement('h3');
+            categoryTitle.textContent = `主要分類：${category}`;
+            dbEditor.appendChild(categoryTitle);
+
+            items.forEach((item, index) => {
+                createEntryUI(item, dbEditor, true, index, category);
+            });
+        });
+    }
+
+    function renderManualEditor() {
+        const controlPanel = document.createElement('div');
+        controlPanel.style.marginBottom = '20px';
+
+        const categorySelect = document.createElement('select');
+        categorySelect.id = 'categorySelect';
+        categorySelect.style.marginRight = '10px';
+        categorySelect.addEventListener('change', categorySelectChange);
+
+        const defaultOption = document.createElement('option');
+        defaultOption.value = '';
+        defaultOption.textContent = '請選擇分類';
+        categorySelect.appendChild(defaultOption);
+
+        Object.keys(data).forEach(category => {
+            const option = document.createElement('option');
+            option.value = category;
+            option.textContent = category;
+            categorySelect.appendChild(option);
+        });
+
+        const customCategoryInput = document.createElement('input');
+        customCategoryInput.type = 'text';
+        customCategoryInput.placeholder = '或輸入新分類';
+        customCategoryInput.id = 'customCategoryInput';
+        customCategoryInput.style.marginRight = '10px';
+        function categorySelectChange(e) {
+            if (e.target.selectedIndex === 0) return customCategoryInput.style.display = '';
+            customCategoryInput.style.display = 'none';
+        }
+
+        addEntryBtn.textContent = '新增文章';
+        addEntryBtn.id = 'addEntryBtn';
+
+        controlPanel.appendChild(categorySelect);
+        controlPanel.appendChild(customCategoryInput);
+        controlPanel.appendChild(addEntryBtn);
+
+        manualEditor.appendChild(controlPanel);
+
+        addEntryBtn.onclick = () => {
+            const selectedCategory = categorySelect.value.trim();
+            const customCategory = customCategoryInput.value.trim();
+            const finalCategory = customCategory || selectedCategory;
+
+            if (!finalCategory) {
+                alert("請選擇或輸入分類");
+                return;
+            }
+
+            const newItem = {
+                title: '',
+                summary: '',
+                content: '',
+                images: [],
+                date: Date.now()
+            };
+
+            if (!data[finalCategory]) {
+                data[finalCategory] = [];
+
+                const newOption = document.createElement('option');
+                newOption.value = finalCategory;
+                newOption.textContent = finalCategory;
+                categorySelect.appendChild(newOption);
+            }
+
+            data[finalCategory].push(newItem);
+
+            createEntryUI(newItem, manualEditor, false, data[finalCategory].length - 1, finalCategory);
+        };
+    }
+
+    function renderChangePassword() {
+        const container = document.createElement('div');
+        container.style.padding = '20px';
+        container.style.fontFamily = 'sans-serif';
+
+        const title = document.createElement('h3');
+        title.textContent = '更新密碼';
+        container.appendChild(title);
+
+        const input = document.createElement('input');
+        input.type = 'password';
+        input.placeholder = '輸入新密碼';
+        input.style.marginRight = "10px";
+        container.appendChild(input);
+
+        const inputCheck = document.createElement('input');
+        inputCheck.type = 'password';
+        inputCheck.placeholder = '確認新密碼';
+        inputCheck.style.marginRight = "10px";
+        container.appendChild(inputCheck);
+
+        const button = document.createElement('button');
+        button.textContent = '更新';
+        container.appendChild(button);
+
+        const status = document.createElement('p');
+        status.style.marginTop = '10px';
+        container.appendChild(status);
+
+        document.body.appendChild(container);
+
+        button.addEventListener('click', async () => {
+            const newPassword = input.value;
+            const checkPassword = inputCheck.value;
+            const user = auth.currentUser;
+
+            if (!user) {
+                status.textContent = '尚未登入，無法更新密碼';
+                return;
+            }
+
+            if (newPassword !== checkPassword) {
+                status.textContent = '密碼不一致，請重新輸入';
+                return;
+            }
+
+            if (!confirm('確定要更新密碼嗎?')) {
+                status.textContent = '操作已取消';
+                return;
+            }
+
+            updatePassword(user, newPassword)
+                .then(() => {
+                    status.textContent = '密碼更新成功';
+                })
+                .catch((error) => {
+                    status.textContent = '更新失敗：' + error.message;
+                });
+            await timer.delay(3000);
+            status.textContent = '';
+        });
+
+    }
+
+    //#region API圖片上傳功能
+    async function uploadImages(file) {
+        if (!file) return alert('請選擇照片');
+
+        const reader = new FileReader();
+        reader.onload = async function () {
+            const base64Content = reader.result.split(',')[1];
+
+            const repo = 'duckodes/TechNotesPicture';
+            const path = `${auth.currentUser.uid}/${file.name}`;
+            const tokenSnapshot = await get(ref(database, `github/${auth.currentUser.uid}/token`));
+            const token = tokenSnapshot.val();
+
+            const response = await fetch(`https://api.github.com/repos/${repo}/contents/${path}`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    message: `新增圖片 ${file.name}`,
+                    content: base64Content
+                })
+            });
+
+            if (response.ok) {
+                alert('照片已成功上傳到 GitHub！');
+            } else {
+                const error = await response.json();
+                alert('上傳失敗：' + error.message);
+            }
+        };
+        reader.readAsDataURL(file);
+    }
+    async function getImageFiles() {
+        const repo = 'duckodes/TechNotesPicture';
+
+        const apiUrl = `https://api.github.com/repos/${repo}/git/trees/main?recursive=1`;
+
+        try {
+            const response = await fetch(apiUrl);
+            const data = await response.json();
+
+            if (!data.tree) {
+                throw new Error("無法取得檔案樹");
+            }
+            const files = data.tree.filter(item =>
+                item.type === "blob" && item.path.startsWith(auth.currentUser.uid + "/")
+            );
+
+            return files.map(file => file.path.split("/").pop());
+        } catch (error) {
+            console.error("取得檔案失敗：", error);
+            return [];
+        }
+    }
+    async function deleteFileFromGitHub(fileName) {
+        const repo = 'duckodes/TechNotesPicture';
+        const path = `${auth.currentUser.uid}/${fileName}`;
+        const tokenSnapshot = await get(ref(database, `github/${auth.currentUser.uid}/token`));
+        const token = tokenSnapshot.val();
+        const apiUrl = `https://api.github.com/repos/${repo}/contents/${path}`;
+
+        try {
+            // 1. 取得檔案的 SHA 值
+            const getResponse = await fetch(apiUrl);
+
+            if (!getResponse.ok) {
+                const error = await getResponse.json();
+                throw new Error(`無法取得檔案資訊: ${error.message}`);
+            }
+
+            const fileData = await getResponse.json();
+            const fileSha = fileData.sha;
+
+            // 2. 發送 DELETE 請求
+            const deleteResponse = await fetch(apiUrl, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    message: `刪除檔案 ${path}`,
+                    sha: fileSha
+                })
+            });
+
+            if (deleteResponse.ok) {
+                console.log('檔案已成功刪除');
+            } else {
+                const error = await deleteResponse.json();
+                console.error('刪除失敗：', error.message);
+            }
+        } catch (error) {
+            console.error('操作失敗：', error.message);
+        }
+    }
+    //#endregion
+
+})();
