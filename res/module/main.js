@@ -12,7 +12,7 @@ const main = (async () => {
     const auth = getAuth(app);
     const database = getDatabase(app);
 
-    const techNotes = await get(ref(database, 'technotes'));
+    const techNotes = await get(ref(database, `technotes/data/${auth.currentUser?.uid}`));
     const dbEditor = document.getElementById('dbEditor');
     const manualEditor = document.getElementById('manualEditor');
     const addEntryBtn = document.getElementById('addEntryBtn');
@@ -32,7 +32,7 @@ const main = (async () => {
     } : techNotes.val();
 
     async function updateData() {
-        const techNotes = await get(ref(database, 'technotes'));
+        const techNotes = await get(ref(database, `technotes/data/${auth.currentUser.uid}`));
         data = techNotes.val();
     }
 
@@ -40,6 +40,7 @@ const main = (async () => {
         if (!user) {
             createLogin();
         } else {
+            await updateData();
             renderDBEditor();
             renderManualEditor();
             renderChangePassword();
@@ -184,7 +185,7 @@ const main = (async () => {
                         async function moveNote(category, recategory, index) {
                             const noteToMove = data[category][index];
 
-                            const categoryRef = ref(database, `technotes/${category}`);
+                            const categoryRef = ref(database, `technotes/data/${auth.currentUser.uid}/${category}`);
                             const snapshot = await get(categoryRef);
                             if (snapshot.exists()) {
                                 const notesArray = Object.values(snapshot.val());
@@ -192,16 +193,16 @@ const main = (async () => {
                                 await set(categoryRef, notesArray);
                             }
 
-                            const targetRef = ref(database, `technotes/${recategory}`);
+                            const targetRef = ref(database, `technotes/data/${auth.currentUser.uid}/${recategory}`);
                             const targetSnapshot = await get(targetRef);
                             const nextIndex = targetSnapshot.exists() ? Object.keys(targetSnapshot.val()).length : 0;
 
-                            await set(ref(database, `technotes/${recategory}/${nextIndex}`), noteToMove);
+                            await set(ref(database, `technotes/data/${auth.currentUser.uid}/${recategory}/${nextIndex}`), noteToMove);
                         }
                         if (recategory.value !== category) {
                             await moveNote(category, recategory.value, index);
                         } else {
-                            await set(ref(database, `technotes/${category}/${index}`), data[category][index]);
+                            await set(ref(database, `technotes/data/${auth.currentUser.uid}/${category}/${index}`), data[category][index]);
                         }
                         dbEditor.innerHTML = '';
                         manualEditor.innerHTML = '';
@@ -227,7 +228,7 @@ const main = (async () => {
         entryDelete.onclick = async () => {
             if (confirm(`即將刪除資料\n類別: ${category}\n序列${index}\n\n標題: ${data[category][index].title}`)) {
                 async function deleteNote(category, index) {
-                    const categoryRef = ref(database, `technotes/${category}`);
+                    const categoryRef = ref(database, `technotes/data/${auth.currentUser.uid}/${category}`);
                     const snapshot = await get(categoryRef);
                     if (snapshot.exists()) {
                         const notesArray = Object.values(snapshot.val());
