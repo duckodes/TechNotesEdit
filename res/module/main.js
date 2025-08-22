@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js";
 import { signInWithEmailAndPassword, signOut, updatePassword } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
-import { getDatabase, ref, get, set } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-database.js";
+import { getDatabase, ref, get, set, update } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-database.js";
 import fetcher from "./fetcher.js";
 import textareaUtils from "./textarea.utils.js";
 import timer from "./timer.js";
@@ -44,6 +44,7 @@ const main = (async () => {
             renderDBEditor();
             renderManualEditor();
             renderChangePassword();
+            await renderChangeName();
         }
     });
     function createLogin() {
@@ -373,6 +374,7 @@ const main = (async () => {
     function renderDBEditor() {
         dbEditor.innerHTML = '';
 
+        if (!data) return;
         Object.entries(data).forEach(([category, items]) => {
             const categoryTitle = document.createElement('h3');
             categoryTitle.textContent = `主要分類：${category}`;
@@ -398,6 +400,7 @@ const main = (async () => {
         defaultOption.textContent = '請選擇分類';
         categorySelect.appendChild(defaultOption);
 
+        if (!data) return;
         Object.keys(data).forEach(category => {
             const option = document.createElement('option');
             option.value = category;
@@ -520,6 +523,80 @@ const main = (async () => {
         });
 
     }
+
+    //#region 更換名稱
+    async function renderChangeName() {
+        const name = await get(ref(database, `technotes/user/${auth.currentUser.uid}/name`));
+
+        const container = document.createElement('div');
+        container.style.padding = '20px';
+        container.style.fontFamily = 'sans-serif';
+
+        const title = document.createElement('h3');
+        title.innerHTML = '更新名稱 <a href="https://notes.duckode.com/?user=' + name.val() + '" style="font-size: 12px;color: #000;" target="_blank">發布連結</a>';
+        container.appendChild(title);
+
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.placeholder = `輸入新名稱(${name.val()})`;
+        input.style.marginRight = "10px";
+        container.appendChild(input);
+
+        const button = document.createElement('button');
+        button.textContent = '更新';
+        container.appendChild(button);
+
+        const status = document.createElement('p');
+        status.style.marginTop = '10px';
+        container.appendChild(status);
+
+        document.body.appendChild(container);
+
+        button.addEventListener('click', async () => {
+            const newName = input.value;
+            const user = auth.currentUser;
+
+            if (!user) {
+                status.textContent = '尚未登入，無法更新名稱';
+                return;
+            }
+
+            if (!newName) {
+                status.textContent = '請輸入新名稱';
+                return;
+            }
+
+            if (!confirm('確定要更新名稱嗎?')) {
+                status.textContent = '操作已取消';
+                return;
+            }
+
+            try {
+                const updates = {
+                    [`/technotes/user/${user.uid}/name`]: newName,
+                    [`/technotes/check/${newName}`]: user.uid
+                };
+
+                const oldName = (await get(ref(database, `technotes/user/${user.uid}/name`))).val();
+                if (oldName && oldName !== newName) {
+                    updates[`/technotes/check/${oldName}`] = null;
+                }
+
+                update(ref(database), updates)
+                    .then(async () => {
+                        status.textContent = '名稱更新成功';
+                        await timer.delay(3000);
+                        status.textContent = '';
+                    })
+                    .catch((error) => {
+                        status.textContent = "更新失敗：" + error;
+                    });
+            } catch (error) {
+                status.textContent = '更新失敗：' + error.message;
+            }
+        });
+    }
+    //#endregion
 
     //#region API圖片上傳功能
     async function uploadImages(file) {
