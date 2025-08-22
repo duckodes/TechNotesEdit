@@ -79,6 +79,17 @@ img {
     cursor: pointer;
 }
 
+.login-container .login-status {
+    cursor: pointer;
+    width: fit-content;
+    display: flex;
+    justify-self: end;
+}
+
+.login-container .login-status:hover {
+    color: #eebe3a;
+}
+
 .login-container button:hover {
     background-color: #0056b3;
 }

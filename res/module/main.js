@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js";
-import { signInWithEmailAndPassword, signOut, updatePassword } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
+import { signInWithEmailAndPassword, signOut, createUserWithEmailAndPassword, updatePassword, updateProfile } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
 import { getDatabase, ref, get, set, update } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-database.js";
 import fetcher from "./fetcher.js";
 import textareaUtils from "./textarea.utils.js";
@@ -36,10 +36,13 @@ const main = (async () => {
         data = techNotes.val();
     }
 
+    let isCreateAccount = false;
+
     onAuthStateChanged(auth, async (user) => {
         if (!user) {
             createLogin();
         } else {
+            if (isCreateAccount) return;
             await updateData();
             renderDBEditor();
             renderManualEditor();
@@ -73,24 +76,66 @@ const main = (async () => {
         passwordInput.placeholder = '輸入密碼';
         container.appendChild(passwordInput);
 
+        const loginStatus = document.createElement('div');
+        loginStatus.className = 'login-status';
+        loginStatus.textContent = '註冊';
+        loginStatus.onclick = () => {
+            if (loginStatus.textContent === '登入') {
+                loginStatus.textContent = '註冊';
+                title.textContent = '登入';
+            } else {
+                loginStatus.textContent = '登入';
+                title.textContent = '註冊';
+            }
+        };
+        container.appendChild(loginStatus);
+
         const button = document.createElement('button');
         button.textContent = '顯示輸入內容';
         container.appendChild(button);
 
-        button.onclick = () => {
+        button.onclick = async () => {
             const email = usernameInput.value;
             const password = passwordInput.value;
-            signInWithEmailAndPassword(auth, email, password)
-                .then((userCredential) => {
-                    const user = userCredential.user;
-                    if (user) {
-                        location.reload();
-                    }
-                })
-                .catch((error) => {
-                    const errorCode = error.code;
-                    console.log(errorCode);
-                });
+            if (title.textContent === '登入') {
+                signInWithEmailAndPassword(auth, email, password)
+                    .then((userCredential) => {
+                        const user = userCredential.user;
+                        if (user) {
+                            location.reload();
+                        }
+                    })
+                    .catch((error) => {
+                        const errorCode = error.code;
+                        console.log(errorCode);
+                    });
+            } else {
+                isCreateAccount = true;
+                try {
+                    const createUser = await createUserWithEmailAndPassword(auth, email, password);
+                    const user = createUser.user;
+                    const displayName = user.email.replace(/@.*?(?=@|$)/g, '');
+                    await updateProfile(user, { displayName: displayName });
+
+                    // check
+                    await set(ref(database, `technotes/check/${displayName}`), user.uid);
+                    // profile
+                    await set(ref(database, `technotes/user/${user.uid}`), {
+                        email: user.email,
+                        employed: '',
+                        github: '',
+                        image: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8z8AABAAChQF3nAAAAABJRU5ErkJggg==',
+                        name: displayName,
+                        title: ''
+                    })
+                    title.textContent = '註冊成功';
+                    await timer.delay(500);
+
+                    location.reload();
+                } catch (e) {
+                    console.log(e);
+                }
+            }
         };
 
         document.body.appendChild(container);
@@ -400,13 +445,14 @@ const main = (async () => {
         defaultOption.textContent = '請選擇分類';
         categorySelect.appendChild(defaultOption);
 
-        if (!data) return;
-        Object.keys(data).forEach(category => {
-            const option = document.createElement('option');
-            option.value = category;
-            option.textContent = category;
-            categorySelect.appendChild(option);
-        });
+        if (data) {
+            Object.keys(data).forEach(category => {
+                const option = document.createElement('option');
+                option.value = category;
+                option.textContent = category;
+                categorySelect.appendChild(option);
+            });
+        }
 
         const customCategoryInput = document.createElement('input');
         customCategoryInput.type = 'text';
@@ -445,18 +491,32 @@ const main = (async () => {
                 date: Date.now()
             };
 
-            if (!data[finalCategory]) {
-                data[finalCategory] = [];
+            if (data) {
+                if (!data[finalCategory]) {
+                    data[finalCategory] = [];
 
+                    const newOption = document.createElement('option');
+                    newOption.value = finalCategory;
+                    newOption.textContent = finalCategory;
+                    categorySelect.appendChild(newOption);
+                }
+
+                data[finalCategory].push(newItem);
+
+                createEntryUI(newItem, manualEditor, false, data[finalCategory].length - 1, finalCategory);
+            } else {
                 const newOption = document.createElement('option');
                 newOption.value = finalCategory;
                 newOption.textContent = finalCategory;
                 categorySelect.appendChild(newOption);
+
+                data = {
+                    [finalCategory]: [newItem]
+                };
+
+                createEntryUI(newItem, manualEditor, false, data[finalCategory].length - 1, finalCategory);
             }
 
-            data[finalCategory].push(newItem);
-
-            createEntryUI(newItem, manualEditor, false, data[finalCategory].length - 1, finalCategory);
         };
     }
 
@@ -526,34 +586,154 @@ const main = (async () => {
 
     //#region 更換名稱
     async function renderChangeName() {
-        const name = await get(ref(database, `technotes/user/${auth.currentUser.uid}/name`));
+        const dataImage = (await get(ref(database, `technotes/user/${auth.currentUser.uid}/image`))).val();
+        const dataName = (await get(ref(database, `technotes/user/${auth.currentUser.uid}/name`))).val();
+        const dataTitle = (await get(ref(database, `technotes/user/${auth.currentUser.uid}/title`))).val();
+        const dataEmployed = (await get(ref(database, `technotes/user/${auth.currentUser.uid}/employed`))).val();
+        const dataEmail = (await get(ref(database, `technotes/user/${auth.currentUser.uid}/email`))).val();
+        const dataGithub = (await get(ref(database, `technotes/user/${auth.currentUser.uid}/github`))).val();
 
         const container = document.createElement('div');
         container.style.padding = '20px';
         container.style.fontFamily = 'sans-serif';
 
         const title = document.createElement('h3');
-        title.innerHTML = '更新名稱 <a href="https://notes.duckode.com/?user=' + name.val() + '" style="font-size: 12px;color: #000;" target="_blank">發布連結</a>';
+        title.innerHTML = '個人資訊 <a href="https://notes.duckode.com/?user=' + dataName + '" style="font-size: 12px;color: #000;" target="_blank">發布連結</a>';
         container.appendChild(title);
-
-        const input = document.createElement('input');
-        input.type = 'text';
-        input.placeholder = `輸入新名稱(${name.val()})`;
-        input.style.marginRight = "10px";
-        container.appendChild(input);
-
-        const button = document.createElement('button');
-        button.textContent = '更新';
-        container.appendChild(button);
 
         const status = document.createElement('p');
         status.style.marginTop = '10px';
+
+        const selectImage = document.createElement('select');
+        selectImage.style.marginRight = '10px';
+        const defaultOption = document.createElement('option');
+        defaultOption.value = '';
+        defaultOption.textContent = '請選擇圖片';
+        selectImage.appendChild(defaultOption);
+        const avatarImage = document.createElement('img');
+        const githubImages = await getImageFiles();
+        Object.values(githubImages).forEach(githubImage => {
+            const option = document.createElement('option');
+            option.value = githubImage;
+            option.textContent = githubImage;
+            if (githubImage === dataImage.replace(`https://duckodes.github.io/TechNotesPicture/${auth.currentUser.uid}/`, '')) {
+                option.selected = true;
+                avatarImage.src = `https://duckodes.github.io/TechNotesPicture/${auth.currentUser.uid}/` + githubImage;
+            }
+            selectImage.appendChild(option);
+        });
+        selectImage.onchange = () => {
+            avatarImage.src = `https://duckodes.github.io/TechNotesPicture/${auth.currentUser.uid}/` + selectImage.value;
+        };
+        container.appendChild(selectImage);
+        container.appendChild(avatarImage);
+        const buttonImage = document.createElement('button');
+        buttonImage.textContent = '更新';
+        container.appendChild(buttonImage);
+        buttonImage.onclick = async () => {
+            try {
+                await set(ref(database, `technotes/user/${auth.currentUser.uid}/image`), avatarImage.src);
+                status.textContent = '已更新頭貼';
+            } catch (e) {
+                status.textContent = `更新頭貼失敗: ${e}`;
+            }
+        };
+
+        const inputName = document.createElement('input');
+        inputName.type = 'text';
+        inputName.placeholder = `輸入新名稱(${dataName})`;
+        inputName.style.marginRight = "10px";
+        container.appendChild(inputName);
+        const buttonName = document.createElement('button');
+        buttonName.textContent = '更新';
+        container.appendChild(buttonName);
+
+        const inputTitle = document.createElement('input');
+        inputTitle.type = 'text';
+        inputTitle.placeholder = `輸入職稱(${dataTitle})`;
+        inputTitle.style.marginRight = "10px";
+        container.appendChild(inputTitle);
+        const buttonTitle = document.createElement('button');
+        buttonTitle.textContent = '更新';
+        container.appendChild(buttonTitle);
+        buttonTitle.onclick = async () => {
+            try {
+                const titleRef = ref(database, `technotes/user/${auth.currentUser.uid}/title`);
+                await set(titleRef, inputTitle.value);
+                inputTitle.placeholder = `輸入新職稱(${(await get(titleRef)).val()})`;
+                inputTitle.value = '';
+                status.textContent = '已更新職稱';
+            } catch (e) {
+                status.textContent = `更新職稱失敗: ${e}`;
+            }
+        };
+
+        const inputEmployed = document.createElement('input');
+        inputEmployed.type = 'text';
+        inputEmployed.placeholder = `輸入職位資訊(${dataEmployed})`;
+        inputEmployed.style.marginRight = "10px";
+        container.appendChild(inputEmployed);
+        const buttonEmployed = document.createElement('button');
+        buttonEmployed.textContent = '更新';
+        container.appendChild(buttonEmployed);
+        buttonEmployed.onclick = async () => {
+            try {
+                const employedRef = ref(database, `technotes/user/${auth.currentUser.uid}/employed`);
+                await set(employedRef, inputEmployed.value);
+                inputEmployed.placeholder = `輸入新職位(${(await get(employedRef)).val()})`;
+                inputEmployed.value = '';
+                status.textContent = '已更新職位';
+            } catch (e) {
+                status.textContent = `更新職位失敗: ${e}`;
+            }
+        };
+
+        const inputEmail = document.createElement('input');
+        inputEmail.type = 'text';
+        inputEmail.placeholder = `輸入新信箱資訊(${dataEmail})`;
+        inputEmail.style.marginRight = "10px";
+        container.appendChild(inputEmail);
+        const buttonEmail = document.createElement('button');
+        buttonEmail.textContent = '更新';
+        container.appendChild(buttonEmail);
+        buttonEmail.onclick = async () => {
+            try {
+                const emailRef = ref(database, `technotes/user/${auth.currentUser.uid}/email`);
+                await set(emailRef, inputEmail.value);
+                inputEmail.placeholder = `輸入新信箱(${(await get(emailRef)).val()})`;
+                inputEmail.value = '';
+                status.textContent = '已更新信箱';
+            } catch (e) {
+                status.textContent = `更新信箱失敗: ${e}`;
+            }
+        };
+
+        const inputGithub = document.createElement('input');
+        inputGithub.type = 'text';
+        inputGithub.placeholder = `輸入 Github 連結(${dataGithub})`;
+        inputGithub.style.marginRight = "10px";
+        container.appendChild(inputGithub);
+        const buttonGithub = document.createElement('button');
+        buttonGithub.textContent = '更新';
+        container.appendChild(buttonGithub);
+        buttonGithub.onclick = async () => {
+            try {
+                const githubRef = ref(database, `technotes/user/${auth.currentUser.uid}/github`);
+                await set(githubRef, inputGithub.value);
+                inputGithub.placeholder = `輸入新信箱(${(await get(githubRef)).val()})`;
+                inputGithub.value = '';
+                status.textContent = '已更新信箱';
+            } catch (e) {
+                status.textContent = `更新信箱失敗: ${e}`;
+            }
+        };
+
         container.appendChild(status);
 
         document.body.appendChild(container);
 
-        button.addEventListener('click', async () => {
-            const newName = input.value;
+        buttonName.addEventListener('click', async () => {
+            const newName = inputName.value;
             const user = auth.currentUser;
 
             if (!user) {
@@ -585,6 +765,8 @@ const main = (async () => {
                 update(ref(database), updates)
                     .then(async () => {
                         status.textContent = '名稱更新成功';
+                        inputName.placeholder = `輸入新名稱(${(await get(ref(database, `technotes/user/${auth.currentUser.uid}/name`))).val()})`;
+                        inputName.value = '';
                         await timer.delay(3000);
                         status.textContent = '';
                     })
