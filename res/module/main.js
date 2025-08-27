@@ -643,29 +643,31 @@ const main = (async () => {
 
         const selectTheme = document.createElement('select');
         selectTheme.style.marginRight = '10px';
-        const themes = (await get(ref(database, `technotes/theme`))).val();
-        Object.values(themes).forEach(theme => {
-            const option = document.createElement('option');
-            option.value = theme;
-            option.textContent = theme;
-            if (theme === dataTheme) {
-                option.selected = true;
-            }
-            selectTheme.appendChild(option);
-        });
-        container.appendChild(selectTheme);
-        const buttonTheme = document.createElement('button');
-        buttonTheme.textContent = '更新';
-        container.appendChild(buttonTheme);
-        buttonTheme.onclick = async () => {
-            try {
-                await set(ref(database, `technotes/user/${auth.currentUser.uid}/theme`), selectTheme.value);
-                status.textContent = '已更新主題';
-                alert('已更新主題為 ' + selectTheme.value);
-            } catch (e) {
-                status.textContent = `更新主題失敗: ${e}`;
-            }
-        };
+        const themes = await fetcher.load('https://notes.duckode.com/res/config/themes.json');
+        if (themes) {
+            Object.values(themes).forEach(theme => {
+                const option = document.createElement('option');
+                option.value = theme;
+                option.textContent = theme;
+                if (theme === dataTheme) {
+                    option.selected = true;
+                }
+                selectTheme.appendChild(option);
+            });
+            container.appendChild(selectTheme);
+            const buttonTheme = document.createElement('button');
+            buttonTheme.textContent = '更新';
+            container.appendChild(buttonTheme);
+            buttonTheme.onclick = async () => {
+                try {
+                    await set(ref(database, `technotes/user/${auth.currentUser.uid}/theme`), selectTheme.value);
+                    status.textContent = '已更新主題';
+                    alert('已更新主題為 ' + selectTheme.value);
+                } catch (e) {
+                    status.textContent = `更新主題失敗: ${e}`;
+                }
+            };
+        }
 
         const inputName = document.createElement('input');
         inputName.type = 'text';
