@@ -47,7 +47,7 @@ const main = (async () => {
             renderDBEditor();
             renderManualEditor();
             renderChangePassword();
-            await renderChangeName();
+            await renderChangeProfile();
         }
     });
     function createLogin() {
@@ -126,6 +126,7 @@ const main = (async () => {
                         github: '',
                         image: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8z8AABAAChQF3nAAAAABJRU5ErkJggg==',
                         name: displayName,
+                        theme: 'default',
                         title: ''
                     })
                     title.textContent = '註冊成功';
@@ -584,14 +585,15 @@ const main = (async () => {
 
     }
 
-    //#region 更換名稱
-    async function renderChangeName() {
+    //#region 更換個人資訊
+    async function renderChangeProfile() {
         const dataImage = (await get(ref(database, `technotes/user/${auth.currentUser.uid}/image`))).val();
         const dataName = (await get(ref(database, `technotes/user/${auth.currentUser.uid}/name`))).val();
         const dataTitle = (await get(ref(database, `technotes/user/${auth.currentUser.uid}/title`))).val();
         const dataEmployed = (await get(ref(database, `technotes/user/${auth.currentUser.uid}/employed`))).val();
         const dataEmail = (await get(ref(database, `technotes/user/${auth.currentUser.uid}/email`))).val();
         const dataGithub = (await get(ref(database, `technotes/user/${auth.currentUser.uid}/github`))).val();
+        const dataTheme = (await get(ref(database, `technotes/user/${auth.currentUser.uid}/theme`))).val();
 
         const container = document.createElement('div');
         container.style.padding = '20px';
@@ -636,6 +638,32 @@ const main = (async () => {
                 status.textContent = '已更新頭貼';
             } catch (e) {
                 status.textContent = `更新頭貼失敗: ${e}`;
+            }
+        };
+
+        const selectTheme = document.createElement('select');
+        selectTheme.style.marginRight = '10px';
+        const themes = (await get(ref(database, `technotes/theme`))).val();
+        Object.values(themes).forEach(theme => {
+            const option = document.createElement('option');
+            option.value = theme;
+            option.textContent = theme;
+            if (theme === dataTheme) {
+                option.selected = true;
+            }
+            selectTheme.appendChild(option);
+        });
+        container.appendChild(selectTheme);
+        const buttonTheme = document.createElement('button');
+        buttonTheme.textContent = '更新';
+        container.appendChild(buttonTheme);
+        buttonTheme.onclick = async () => {
+            try {
+                await set(ref(database, `technotes/user/${auth.currentUser.uid}/theme`), selectTheme.value);
+                status.textContent = '已更新主題';
+                alert('已更新主題為 ' + selectTheme.value);
+            } catch (e) {
+                status.textContent = `更新主題失敗: ${e}`;
             }
         };
 
