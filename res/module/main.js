@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js";
+import { getAuth, onAuthStateChanged, deleteUser } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js";
 import { signInWithEmailAndPassword, signOut, createUserWithEmailAndPassword, updatePassword, updateProfile } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
 import { getDatabase, ref, get, set, update } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-database.js";
 import fetcher from "./fetcher.js";
@@ -61,6 +61,21 @@ const main = (async () => {
                 location.reload();
             });
             containerLogout.appendChild(logoutButton);
+            const deleteAccountButton = document.createElement('button');
+            deleteAccountButton.textContent = '刪除帳號';
+            deleteAccountButton.addEventListener('click', async () => {
+                if (!confirm('確定要刪除帳號嗎? 此操作無法復原')) return;
+                const oldName = (await get(ref(database, `technotes/user/${user.uid}/name`))).val();
+                const updates = {
+                    [`/technotes/check/${oldName}`]: null
+                };
+                await update(ref(database), updates);
+                await set(ref(database, `technotes/user/${user.uid}`), null);
+                await set(ref(database, `technotes/data/${user.uid}`), null);
+                await deleteUser(user);
+                location.reload();
+            });
+            containerLogout.appendChild(deleteAccountButton);
 
             renderChangePassword();
         }
