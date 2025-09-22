@@ -99,3 +99,45 @@ img {
     font-size: 0.9em;
     color: #333;
 }
+
+#manualEditor {
+    border: 1px solid #ccc;
+    padding: 1em;
+    margin-bottom: 1em;
+    background: #d3e4e7;
+    position: relative;
+}
+
+.profile-container {
+    border: 1px solid #ccc;
+    padding: 1em;
+    background: #fff;
+    position: relative;
+}
+
+.logout-container {
+    width: 100%;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.logout-container button {
+    margin: 10px;
+    padding: 10px 20px;
+    background-color: #dc3545;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.logout-container button:hover {
+    background-color: #c82333;
+}
+
+.change-password-container {
+    border: 1px solid #ccc;
+    padding: 1em;
+    margin-bottom: 1em;
+    background: #fff;
+}
