@@ -188,7 +188,7 @@ const main = (async () => {
 
             <label>內容</label>
             <textarea rows="4">${item.content}</textarea><br>
-            <iframe src="https://notes.duckode.com/?user=${(await get(ref(database, `technotes/user/${auth.currentUser.uid}/name`))).val()}" width="100%" height="600px" style="border:none;"></iframe>
+            <iframe src="https://notes.duckode.com/?user=${(await get(ref(database, `technotes/user/${auth.currentUser.uid}/name`))).val()}&area=article-view" width="100%" height="600px" style="border:none;"></iframe>
 
             <label>圖片連結</label>
             <div class="imageInputs"></div>
@@ -205,12 +205,6 @@ const main = (async () => {
             <button class="delete">刪除文章</button>
             <select class="recategory" style="margin-right: 10px;"></select>
         `;
-        const iframe = entry.querySelector('iframe');
-        iframe.onload = () => {
-            const innerDoc = iframe.contentDocument || iframe.contentWindow.document;
-            innerDoc.querySelector('.container').display = 'none';
-            innerDoc.querySelector('.article-view').display = 'block';
-        };
 
         const fileInput = entry.querySelector('#fileInput');
         fileInput.onchange = async (e) => {
