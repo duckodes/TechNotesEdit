@@ -192,7 +192,7 @@ const main = (async () => {
             <textarea rows="4">${item.content}</textarea><br>
 
             <label>內容檢視</label>
-            <iframe class="preview-page" src="http://127.0.0.1:31338/?user=${userName}&category=${category}&categoryID=${index}" width="100%" height="600px" style="border:none;"></iframe>
+            <iframe class="preview-page" src="https://notes.duckode.com/?user=${userName}&category=${category}&categoryID=${index}" width="100%" height="600px" style="border:none;"></iframe>
 
             <label>圖片連結</label>
             <div class="imageInputs"></div>
