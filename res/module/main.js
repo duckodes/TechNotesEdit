@@ -36,6 +36,7 @@ const main = (async () => {
         data = techNotes.val();
     }
 
+    let userName;
     let isCreateAccount = false;
 
     onAuthStateChanged(auth, async (user) => {
@@ -43,6 +44,7 @@ const main = (async () => {
             createLogin();
         } else {
             if (isCreateAccount) return;
+            userName = (await get(ref(database, `technotes/user/${auth.currentUser.uid}/name`))).val();
             await updateData();
             renderDBEditor();
             renderManualEditor();
@@ -188,7 +190,9 @@ const main = (async () => {
 
             <label>內容</label>
             <textarea rows="4">${item.content}</textarea><br>
-            <iframe src="https://notes.duckode.com/?user=${(await get(ref(database, `technotes/user/${auth.currentUser.uid}/name`))).val()}&category=${category}&categoryID=${index}" width="100%" height="600px" style="border:none;"></iframe>
+
+            <label>內容檢視</label>
+            <iframe class="preview-page" src="http://127.0.0.1:31338/?user=${userName}&category=${category}&categoryID=${index}" width="100%" height="600px" style="border:none;"></iframe>
 
             <label>圖片連結</label>
             <div class="imageInputs"></div>
@@ -205,6 +209,12 @@ const main = (async () => {
             <button class="delete">刪除文章</button>
             <select class="recategory" style="margin-right: 10px;"></select>
         `;
+        window.addEventListener('message', (e) => {
+            const params = new URLSearchParams(entry.querySelector('.preview-page').src);
+            if (e.data.id !== params.get('category') + params.get('categoryID')) return;
+            console.log(e.data);
+            entry.querySelector('.preview-page').height = e.data.height + 'px';
+        });
 
         const fileInput = entry.querySelector('#fileInput');
         fileInput.onchange = async (e) => {
