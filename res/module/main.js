@@ -170,6 +170,18 @@ const main = (async () => {
                 }
             }
         };
+        const handleKey = (event) => {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                button.click();
+            }
+        };
+        passwordInput.addEventListener('focus', () => {
+            passwordInput.addEventListener('keydown', handleKey);
+        });
+        passwordInput.addEventListener('blur', () => {
+            passwordInput.removeEventListener('keydown', handleKey);
+        });
 
         document.body.appendChild(container);
     }
@@ -684,6 +696,14 @@ const main = (async () => {
             }
         };
         container.appendChild(containerImage);
+        const uploadImageInput = document.createElement('input');
+        uploadImageInput.type = 'file';
+        uploadImageInput.accept = 'image/*';
+        uploadImageInput.onchange = async (e) => {
+            const file = e.target.files[0];
+            await uploadImages(file);
+        }
+        container.appendChild(uploadImageInput);
 
         const selectTheme = document.createElement('select');
         selectTheme.style.marginRight = '10px';
@@ -916,6 +936,8 @@ const main = (async () => {
         }
     }
     async function deleteFileFromGitHub(fileName) {
+        if (fileName === '') return;
+
         const repo = 'duckodes/TechNotesPicture';
         const path = `${auth.currentUser.uid}/${fileName}`;
         const tokenSnapshot = await get(ref(database, `github/${auth.currentUser.uid}/token`));
@@ -923,7 +945,7 @@ const main = (async () => {
         const apiUrl = `https://api.github.com/repos/${repo}/contents/${path}`;
 
         try {
-            // 1. 取得檔案的 SHA 值
+            // 取得檔案的 SHA 值
             const getResponse = await fetch(apiUrl);
 
             if (!getResponse.ok) {
@@ -934,7 +956,7 @@ const main = (async () => {
             const fileData = await getResponse.json();
             const fileSha = fileData.sha;
 
-            // 2. 發送 DELETE 請求
+            // 發送 DELETE 請求
             const deleteResponse = await fetch(apiUrl, {
                 method: 'DELETE',
                 headers: {
