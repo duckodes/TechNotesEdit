@@ -266,6 +266,7 @@ const main = (async () => {
                 data[category][index].images = Array.from(imageInputs).map(input => `https://duckodes.github.io/TechNotesPicture/${auth.currentUser.uid}/` + input.value);
 
                 if (confirm(confirmText)) {
+                    data[category][index].date = Date.now();
                     try {
                         async function moveNote(category, recategory, index) {
                             const noteToMove = data[category][index];
