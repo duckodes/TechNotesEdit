@@ -245,12 +245,16 @@ const main = (async () => {
             recategory.appendChild(option);
         });
 
-        if (isFromDB) {
-            renderUploadBtn('更新', `確認更新資料\n類別: ${category}\n序列${index}\n\n標題: ${data[category][index].title}`);
-        } else {
-            renderUploadBtn('上傳', `確認上傳資料\n類別: ${category}\n序列${index}\n\n標題: ${data[category][index].title}`);
+        const dataState = {
+            update: 0,
+            upload: 1
         }
-        function renderUploadBtn(btnTextContent, confirmText) {
+        if (isFromDB) {
+            renderUploadBtn('更新', `確認更新資料\n類別: ${category}\n序列${index}\n\n標題: ${data[category][index].title}`, dataState.update);
+        } else {
+            renderUploadBtn('上傳', `確認上傳資料\n類別: ${category}\n序列${index}\n\n標題: ${data[category][index].title}`, dataState.upload);
+        }
+        function renderUploadBtn(btnTextContent, confirmText, state) {
             const uploadSingleBtn = document.createElement('button');
             uploadSingleBtn.textContent = btnTextContent;
             uploadSingleBtn.style.marginTop = '10px';
@@ -266,7 +270,8 @@ const main = (async () => {
                 data[category][index].images = Array.from(imageInputs).map(input => `https://duckodes.github.io/TechNotesPicture/${auth.currentUser.uid}/` + input.value);
 
                 if (confirm(confirmText)) {
-                    data[category][index].date = Date.now();
+                    const dateNow = Date.now();
+                    state === dataState.upload && (data[category][index].date = dateNow);
                     try {
                         async function moveNote(category, recategory, index) {
                             const noteToMove = data[category][index];
