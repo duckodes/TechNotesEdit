@@ -202,9 +202,9 @@ const main = (async () => {
 
             <label>內容</label>
             <textarea rows="4">${item.content}</textarea><br>
-
-            <label>內容檢視</label>
-            <iframe class="preview-page" src="https://notes.duckode.com/?user=${userName}&category=${category}&categoryID=${index}" width="100%" height="600px" style="border:none;"></iframe>
+            
+            <button class="code-space">插入代碼框架</button>
+            <button class="a-space">插入超連結框架</button>
 
             <label>圖片連結</label>
             <div class="imageInputs"></div>
@@ -216,32 +216,44 @@ const main = (async () => {
 
             <div class="date">日期：${new Date(Number(item.date)).toLocaleString()}</div>
 
-            <button class="code-space">插入代碼框架</button>
-            <button class="a-space">插入超連結框架</button>
-            <button class="delete">刪除文章</button>
             <select class="recategory" style="margin-right: 10px;"></select>
+
+            <label>內容檢視</label>
+            ${!isFromDB ? '' : `<iframe class="preview-page" src="https://notes.duckode.com/?user=${userName}&category=${category}&categoryID=${index}" width="100%" height="600px" style="border:none;"></iframe>`}
+            
+            <button class="delete">刪除文章</button>
         `;
         window.addEventListener('message', (e) => {
-            const params = new URLSearchParams(entry.querySelector('.preview-page').src);
+            const params = new URLSearchParams(entry.querySelector('.preview-page')?.src);
             if (e.data.id !== params.get('category') + params.get('categoryID')) return;
             entry.querySelector('.preview-page').height = e.data.height + 'px';
         });
         let resizeTimer;
-        window.addEventListener('resize', () => {
-            if (!resizeTimer) {
-                entry.querySelector('.preview-page').style.visibility = 'hidden';
-            }
+        let lastWidth = document.documentElement.clientWidth;
+        const observer = new ResizeObserver(() => {
+            const currentWidth = document.documentElement.clientWidth;
 
-            clearTimeout(resizeTimer);
-            resizeTimer = setTimeout(() => {
-                const iframe = entry.querySelector('.preview-page');
-                if (iframe) {
-                    iframe.style.visibility = 'visible';
-                    iframe.src = iframe.src;
-                    resizeTimer = null;
+            if (currentWidth !== lastWidth) {
+                if (!resizeTimer) {
+                    const iframe = entry.querySelector('.preview-page');
+                    if (iframe) {
+                        iframe.style.visibility = 'hidden';
+                    }
                 }
-            }, 300);
+
+                clearTimeout(resizeTimer);
+                resizeTimer = setTimeout(() => {
+                    const iframe = entry.querySelector('.preview-page');
+                    if (iframe) {
+                        iframe.style.visibility = 'visible';
+                        iframe.src = iframe.src;
+                        resizeTimer = null;
+                    }
+                }, 500);
+                lastWidth = currentWidth;
+            }
         });
+        observer.observe(document.documentElement);
 
         const fileInput = entry.querySelector('#fileInput');
         fileInput.onchange = async (e) => {
@@ -265,11 +277,11 @@ const main = (async () => {
             upload: 1
         }
         if (isFromDB) {
-            renderUploadBtn('更新', `確認更新資料\n類別: ${category}\n序列${index}\n\n標題: ${data[category][index].title}`, dataState.update);
+            renderUploadBtn('更新', dataState.update);
         } else {
-            renderUploadBtn('上傳', `確認上傳資料\n類別: ${category}\n序列${index}\n\n標題: ${data[category][index].title}`, dataState.upload);
+            renderUploadBtn('上傳', dataState.upload);
         }
-        function renderUploadBtn(btnTextContent, confirmText, state) {
+        function renderUploadBtn(btnTextContent, state) {
             const uploadSingleBtn = document.createElement('button');
             uploadSingleBtn.textContent = btnTextContent;
             uploadSingleBtn.style.marginTop = '10px';
@@ -284,6 +296,15 @@ const main = (async () => {
                 data[category][index].content = contentTextarea.value;
                 data[category][index].images = Array.from(imageInputs).map(input => `https://duckodes.github.io/TechNotesPicture/${auth.currentUser.uid}/` + input.value);
 
+                let confirmText = '';
+                switch (state) {
+                    case dataState.update:
+                        confirmText = `確認更新資料\n類別: ${category}\n序列${index}\n\n標題: ${data[category][index].title}`;
+                        break;
+                    case dataState.upload:
+                        confirmText = `確認上傳資料\n類別: ${category}\n序列${index}\n\n標題: ${data[category][index].title}`;
+                        break;
+                }
                 if (confirm(confirmText)) {
                     const dateNow = Date.now();
                     state === dataState.upload && (data[category][index].date = dateNow);
@@ -850,7 +871,7 @@ const main = (async () => {
 
         container.appendChild(status);
 
-        document.body.appendChild(container);
+        dbEditor.parentNode.insertBefore(container, dbEditor);
 
         buttonName.addEventListener('click', async () => {
             const newName = inputName.value;
