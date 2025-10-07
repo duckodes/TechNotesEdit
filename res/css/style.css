@@ -5,6 +5,36 @@ body {
     color: #333;
 }
 
+select {
+    padding: 8px 12px;
+    font-size: 16px;
+    border: 2px solid #888;
+    border-radius: 6px;
+    background-color: #f9f9f9;
+    color: #333;
+}
+
+button {
+    margin: 10px;
+    padding: 10px 20px;
+    background-color: #656565;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 200ms ease;
+}
+
+button:hover {
+    background-color: #656565;
+    box-shadow: 1px 1px 2px #202020;
+}
+
+button:active {
+    background-color: #656565;
+    box-shadow: inset 1px 1px 10px #202020;
+}
+
 .entry {
     border: 1px solid #ccc;
     padding: 1em;

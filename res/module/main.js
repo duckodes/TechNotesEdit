@@ -224,8 +224,23 @@ const main = (async () => {
         window.addEventListener('message', (e) => {
             const params = new URLSearchParams(entry.querySelector('.preview-page').src);
             if (e.data.id !== params.get('category') + params.get('categoryID')) return;
-            console.log(e.data);
             entry.querySelector('.preview-page').height = e.data.height + 'px';
+        });
+        let resizeTimer;
+        window.addEventListener('resize', () => {
+            if (!resizeTimer) {
+                entry.querySelector('.preview-page').style.visibility = 'hidden';
+            }
+
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(() => {
+                const iframe = entry.querySelector('.preview-page');
+                if (iframe) {
+                    iframe.style.visibility = 'visible';
+                    iframe.src = iframe.src;
+                    resizeTimer = null;
+                }
+            }, 300);
         });
 
         const fileInput = entry.querySelector('#fileInput');
