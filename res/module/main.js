@@ -344,6 +344,7 @@ const main = (async () => {
                             alert("登入成功！");
                         } catch (error) {
                             alert("登入失敗：" + error.message);
+                            return;
                         }
                     }
                     try {
@@ -371,14 +372,14 @@ const main = (async () => {
                         }
                         dbEditor.innerHTML = '';
                         manualEditor.innerHTML = '';
+                        await updateData();
+                        renderDBEditor();
+                        renderManualEditor();
+                        console.log(`已更新 ${category} ${index}：`, data[category][index]);
                     } catch (error) {
                         alert("上傳失敗:" + error);
                         return;
                     }
-                    await updateData();
-                    renderDBEditor();
-                    renderManualEditor();
-                    console.log(`已更新 ${category} ${index}：`, data[category][index]);
                 }
             };
             entry.appendChild(uploadSingleBtn);
