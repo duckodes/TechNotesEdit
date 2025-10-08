@@ -80,8 +80,27 @@ const main = (async () => {
             containerLogout.appendChild(deleteAccountButton);
 
             renderChangePassword();
+            await expirationTime(user);
         }
     });
+    async function expirationTime(user) {
+        const timer = document.createElement('p');
+        timer.textContent = new Date(Date.parse((await user.getIdTokenResult()).expirationTime)).toLocaleString() + ' 過期';
+        document.body.insertBefore(timer, document.body.children[3]);
+    }
+    async function isTokenValid(user) {
+        if (!user) return false;
+
+        try {
+            const tokenResult = await user.getIdTokenResult();
+            const now = Date.now();
+            const exp = Date.parse(tokenResult.expirationTime);
+            return exp < now;
+        } catch (e) {
+            console.error("Token 判斷失敗", e);
+            return false;
+        }
+    }
     function createLogin() {
         const container = document.createElement('div');
         container.className = 'login-container';
@@ -308,6 +327,23 @@ const main = (async () => {
                 if (confirm(confirmText)) {
                     const dateNow = Date.now();
                     state === dataState.upload && (data[category][index].date = dateNow);
+                    const valid = await isTokenValid();
+                    if (!valid) {
+                        alert("登入已過期，請重新登入");
+                        const email = prompt("請輸入帳號或信箱");
+                        const password = prompt("請輸入密碼");
+                        if (!email || !password) {
+                            alert("帳號或密碼未輸入完整");
+                            return;
+                        }
+                        try {
+                            await signInWithEmailAndPassword(auth, email, password);
+                            alert("登入成功！");
+                        } catch (error) {
+                            alert("登入失敗：" + error.message);
+                        }
+                        return;
+                    }
                     try {
                         async function moveNote(category, recategory, index) {
                             const noteToMove = data[category][index];
