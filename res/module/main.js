@@ -88,11 +88,11 @@ const main = (async () => {
         timer.textContent = new Date(Date.parse((await user.getIdTokenResult()).expirationTime)).toLocaleString() + ' 過期';
         document.body.insertBefore(timer, document.body.children[3]);
     }
-    async function isTokenValid(user) {
-        if (!user) return false;
+    async function isTokenValid() {
+        if (!auth.currentUser) return false;
 
         try {
-            const tokenResult = await user.getIdTokenResult();
+            const tokenResult = await auth.currentUser.getIdTokenResult();
             const now = Date.now();
             const exp = Date.parse(tokenResult.expirationTime);
             return exp < now;
@@ -329,6 +329,9 @@ const main = (async () => {
                     state === dataState.upload && (data[category][index].date = dateNow);
                     const valid = await isTokenValid();
                     if (!valid) {
+                        await relogin();
+                    }
+                    async function relogin() {
                         alert("登入已過期，請重新登入");
                         const email = prompt("請輸入帳號或信箱");
                         const password = prompt("請輸入密碼");
@@ -342,7 +345,6 @@ const main = (async () => {
                         } catch (error) {
                             alert("登入失敗：" + error.message);
                         }
-                        return;
                     }
                     try {
                         async function moveNote(category, recategory, index) {
