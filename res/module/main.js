@@ -328,7 +328,7 @@ const main = (async () => {
                     const dateNow = Date.now();
                     state === dataState.upload && (data[category][index].date = dateNow);
                     const valid = await isTokenValid();
-                    if (!valid) {
+                    if (valid) {
                         await relogin();
                     }
                     async function relogin() {
