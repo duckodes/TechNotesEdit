@@ -362,20 +362,20 @@ const main = (async () => {
                             const nextIndex = targetSnapshot.exists() ? Object.keys(targetSnapshot.val()).length : 0;
 
                             await set(ref(database, `technotes/data/${auth.currentUser.uid}/${recategory}/${nextIndex}`), noteToMove);
+                            console.log(`移動 ${category} ${index} 至 ${recategory} ${nextIndex}：`, data[recategory][nextIndex]);
                         }
                         if (recategory.value !== category) {
                             await moveNote(category, recategory.value, index);
                         } else {
                             await set(ref(database, `technotes/data/${auth.currentUser.uid}/${category}/${index}`), data[category][index]);
+                            console.log(`已更新 ${category} ${index}：`, data[category][index]);
                         }
                         dbEditor.innerHTML = '';
                         manualEditor.innerHTML = '';
                         await updateData();
                         renderDBEditor();
                         renderManualEditor();
-                        console.log(`已更新 ${category} ${index}：`, data[category][index]);
                     } catch (error) {
-                        console.error("上傳失敗:" + error);
                         alert("上傳失敗:" + error);
                         return;
                     }
