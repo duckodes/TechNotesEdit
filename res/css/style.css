@@ -171,3 +171,52 @@ img {
     margin-bottom: 1em;
     background: #fff;
 }
+
+#tagInputContainer {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+#tagInputContainer input {
+    flex: 1;
+}
+
+#tagInputContainer button {
+    flex-shrink: 0;
+}
+
+#tagList {
+    margin-top: 10px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.tag {
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+}
+
+#suggestions {
+    margin-top: 5px;
+    border: 1px solid #ccc;
+    max-height: 150px;
+    overflow-y: auto;
+    background-color: #fff;
+    position: absolute;
+    z-index: 10;
+    width: 200px;
+}
+
+.suggestion {
+    padding: 6px 10px;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+}
+
+.suggestion:hover {
+    background-color: #f0f0f0;
+}

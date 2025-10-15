@@ -227,8 +227,16 @@ const main = (async () => {
             <label>內容檢視</label>
             ${!isFromDB ? '' : `<iframe class="preview-page" src="https://notes.duckode.com/?user=${userName}&category=${category}&categoryID=${index}" width="100%" height="600px" style="border:none;"></iframe>`}
             
+            <div id="tagInputContainer">
+                <input type="text" class="tagInput" placeholder="輸入標籤後按 Enter">
+                <button id="tagAdd">新增標籤</button>
+            </div>
+            <div id="suggestions"></div>
+            <div id="tagList"></div>
+
             <button class="delete">刪除文章</button>
         `;
+
         window.addEventListener('message', (e) => {
             const params = new URLSearchParams(entry.querySelector('.preview-page')?.src);
             if (e.data.id !== params.get('category') + params.get('categoryID')) return;
@@ -370,6 +378,7 @@ const main = (async () => {
                             await set(ref(database, `technotes/data/${auth.currentUser.uid}/${category}/${index}`), data[category][index]);
                             console.log(`已更新 ${category} ${index}：`, data[category][index]);
                         }
+                        await setTags(tags);
                         dbEditor.innerHTML = '';
                         manualEditor.innerHTML = '';
                         await updateData();
@@ -533,6 +542,142 @@ const main = (async () => {
         };
 
         renderImages();
+
+        // 標籤
+        const tagInput = entry.querySelector('.tagInput');
+        const tagAdd = entry.querySelector('#tagAdd');
+        const tagList = entry.querySelector('#tagList');
+        const suggestionsBox = entry.querySelector('#suggestions');
+        const tags = (await get(ref(database, `technotes/data/${auth.currentUser.uid}/${category}/${index}/tags`))).val() || [];
+        renderTags();
+        const allTags = (await get(ref(database, `technotes/user/${auth.currentUser.uid}/tags`))).val() || [];
+
+        tagInput.addEventListener('focus', showSuggestions);
+        tagInput.addEventListener('input', showSuggestions);
+
+        tagInput.addEventListener('blur', async () => {
+            await timer.delay(200); // 保留點擊建議的時間
+            suggestionsBox.innerHTML = '';
+        });
+
+        function showSuggestions() {
+            const input = tagInput.value.trim().toLowerCase();
+            suggestionsBox.innerHTML = '';
+
+            const matched = allTags.filter(tag =>
+                (!input || tag.toLowerCase().includes(input)) && !tags.includes(tag)
+            );
+
+            matched.forEach(tag => {
+                const suggestion = document.createElement('div');
+                suggestion.className = 'suggestion';
+                suggestion.textContent = tag;
+                suggestion.onclick = () => {
+                    tags.push(tag);
+                    renderTags();
+                    tagInput.value = '';
+                    suggestionsBox.innerHTML = '';
+                };
+                suggestionsBox.appendChild(suggestion);
+                const removetags = document.createElement('div');
+                removetags.textContent = 'x';
+                removetags.onclick = async (e) => {
+                    e.stopPropagation();
+                    const updatedTags = allTags.filter(t => t !== tag);
+                    await set(ref(database, `technotes/user/${auth.currentUser.uid}/tags`), updatedTags);
+                    allTags.splice(allTags.indexOf(tag), 1);
+                    showSuggestions();
+                    if (confirm(`是否要一併從所有文章中移除標籤「${tag}」？`)) {
+                        await removeTagFromAllArticles(tag);
+
+                        dbEditor.innerHTML = '';
+                        manualEditor.innerHTML = '';
+                        await updateData();
+                        renderDBEditor();
+                        renderManualEditor();
+                    }
+                };
+                suggestion.appendChild(removetags);
+            });
+        }
+
+        tagAdd.addEventListener('click', () => {
+            addTag();
+        });
+        tagInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                addTag();
+            }
+        });
+        function addTag() {
+            const newTag = tagInput.value.trim();
+            if (newTag && !tags.includes(newTag)) {
+                tags.push(newTag);
+                renderTags();
+            }
+            tagInput.value = '';
+            suggestionsBox.innerHTML = '';
+        }
+
+        function renderTags() {
+            tagList.innerHTML = '';
+            tags.forEach(tag => {
+                const tagEl = document.createElement('span');
+                tagEl.className = 'tag';
+                tagEl.textContent = tag;
+
+                const removeBtn = document.createElement('button');
+                removeBtn.textContent = '×';
+                removeBtn.onclick = () => {
+                    tags.splice(tags.indexOf(tag), 1);
+                    renderTags();
+                };
+
+                tagEl.appendChild(removeBtn);
+                tagList.appendChild(tagEl);
+            });
+        }
+
+        async function setTags(tags) {
+            await set(ref(database, `technotes/data/${auth.currentUser.uid}/${category}/${index}/tags`), tags);
+
+            const newTags = tags.filter(tag => !allTags.includes(tag));
+            if (newTags.length > 0) {
+                await set(ref(database, `technotes/user/${auth.currentUser.uid}/tags`), [...allTags, ...newTags]);
+            }
+        }
+        async function removeTagFromAllArticles(tagToRemove) {
+            const userId = auth.currentUser.uid;
+            const dataPath = `technotes/data/${userId}`;
+
+            const snapshot = await get(ref(database, dataPath));
+
+            if (snapshot.exists()) {
+                const articles = snapshot.val();
+
+                for (const category in articles) {
+                    for (const index in articles[category]) {
+                        const article = articles[category][index];
+                        const currentTags = article.tags || [];
+
+                        if (currentTags.includes(tagToRemove)) {
+                            const updatedTags = currentTags.filter(t => t !== tagToRemove);
+
+                            await set(
+                                ref(database, `${dataPath}/${category}/${index}/tags`),
+                                updatedTags
+                            );
+                        }
+                    }
+                }
+
+                console.log(`已從所有文章中移除標籤「${tagToRemove}」`);
+            } else {
+                console.warn('找不到任何文章資料');
+            }
+        }
+
+
     }
 
     function renderDBEditor() {
