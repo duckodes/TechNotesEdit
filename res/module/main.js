@@ -88,19 +88,6 @@ const main = (async () => {
         timer.textContent = new Date(Date.parse((await user.getIdTokenResult()).expirationTime)).toLocaleString() + ' 過期';
         document.body.insertBefore(timer, document.body.children[3]);
     }
-    async function isTokenValid() {
-        if (!auth.currentUser) return false;
-
-        try {
-            const tokenResult = await auth.currentUser.getIdTokenResult();
-            const now = Date.now();
-            const exp = Date.parse(tokenResult.expirationTime);
-            return exp < now;
-        } catch (e) {
-            console.error("Token 判斷失敗", e);
-            return false;
-        }
-    }
     function createLogin() {
         const container = document.createElement('div');
         container.className = 'login-container';
@@ -327,9 +314,20 @@ const main = (async () => {
                 if (confirm(confirmText)) {
                     const dateNow = Date.now();
                     state === dataState.upload && (data[category][index].date = dateNow);
-                    const valid = await isTokenValid();
-                    if (valid) {
-                        await relogin();
+                    await isTokenValid();
+                    async function isTokenValid() {
+                        if (!auth.currentUser) return false;
+
+                        try {
+                            const tokenResult = await auth.currentUser.getIdTokenResult();
+                            const now = Date.now();
+                            const exp = Date.parse(tokenResult.expirationTime);
+                            return exp < now;
+                        } catch (e) {
+                            await relogin();
+                            console.error("Token 判斷失敗", e);
+                            return false;
+                        }
                     }
                     async function relogin() {
                         alert("登入已過期，請重新登入");
