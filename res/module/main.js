@@ -375,6 +375,7 @@ const main = (async () => {
                         renderManualEditor();
                         console.log(`已更新 ${category} ${index}：`, data[category][index]);
                     } catch (error) {
+                        console.error("上傳失敗:" + error);
                         alert("上傳失敗:" + error);
                         return;
                     }
