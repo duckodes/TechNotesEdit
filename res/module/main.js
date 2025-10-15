@@ -362,7 +362,7 @@ const main = (async () => {
                             const nextIndex = targetSnapshot.exists() ? Object.keys(targetSnapshot.val()).length : 0;
 
                             await set(ref(database, `technotes/data/${auth.currentUser.uid}/${recategory}/${nextIndex}`), noteToMove);
-                            console.log(`移動 ${category} ${index} 至 ${recategory} ${nextIndex}：`, data[recategory][nextIndex]);
+                            console.log(`移動 ${category} ${index} 至 ${recategory} ${nextIndex}`);
                         }
                         if (recategory.value !== category) {
                             await moveNote(category, recategory.value, index);
