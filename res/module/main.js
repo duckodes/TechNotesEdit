@@ -224,7 +224,10 @@ const main = (async () => {
 
             <select class="recategory" style="margin-right: 10px;"></select>
 
-            <label>內容檢視</label>
+            <div class="content-preview">
+                <label>內容檢視</label>
+                <input type="checkbox" class="content-input-preview"/>
+            </div>
             ${!isFromDB ? '' : `<iframe class="preview-page" src="https://notes.duckode.com/?user=${userName}&category=${category}&categoryID=${index}" width="100%" height="600px" style="border:none;"></iframe>`}
             
             <div id="tagInputContainer">
@@ -237,7 +240,21 @@ const main = (async () => {
             <button class="delete">刪除文章</button>
         `;
 
+        const contentInputPreview = entry.querySelector('.content-input-preview');
+        if (!contentInputPreview.checked) {
+            entry.querySelector('.preview-page').style.display = 'none';
+        }
+        contentInputPreview.addEventListener('change', () => {
+            const iframe = entry.querySelector('.preview-page');
+            if (contentInputPreview.checked) {
+                iframe.style.display = '';
+                iframe.src = iframe.src;
+            } else {
+                iframe.style.display = 'none';
+            }
+        });
         window.addEventListener('message', (e) => {
+            if (!contentInputPreview.checked) return;
             const params = new URLSearchParams(entry.querySelector('.preview-page')?.src);
             if (e.data.id !== params.get('category') + params.get('categoryID')) return;
             entry.querySelector('.preview-page').height = e.data.height + 'px';
@@ -245,6 +262,7 @@ const main = (async () => {
         let resizeTimer;
         let lastWidth = document.documentElement.clientWidth;
         const observer = new ResizeObserver(() => {
+            if (!contentInputPreview.checked) return;
             const currentWidth = document.documentElement.clientWidth;
 
             if (currentWidth !== lastWidth) {
