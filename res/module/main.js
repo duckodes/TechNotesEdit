@@ -240,19 +240,6 @@ const main = (async () => {
             <button class="delete">刪除文章</button>
         `;
 
-        const contentInputPreview = entry.querySelector('.content-input-preview');
-        if (!contentInputPreview.checked) {
-            entry.querySelector('.preview-page').style.display = 'none';
-        }
-        contentInputPreview.addEventListener('change', () => {
-            const iframe = entry.querySelector('.preview-page');
-            if (contentInputPreview.checked) {
-                iframe.style.display = '';
-                iframe.src = iframe.src;
-            } else {
-                iframe.style.display = 'none';
-            }
-        });
         window.addEventListener('message', (e) => {
             if (!contentInputPreview.checked) return;
             const params = new URLSearchParams(entry.querySelector('.preview-page')?.src);
@@ -286,6 +273,23 @@ const main = (async () => {
             }
         });
         observer.observe(document.documentElement);
+        const contentInputPreview = entry.querySelector('.content-input-preview');
+        if (!contentInputPreview.checked) {
+            const iframe = entry.querySelector('.preview-page');
+            if (iframe) {
+                entry.querySelector('.preview-page').style.display = 'none';
+            }
+        }
+        contentInputPreview.addEventListener('change', () => {
+            const iframe = entry.querySelector('.preview-page');
+            if (!iframe) return;
+            if (contentInputPreview.checked) {
+                iframe.style.display = '';
+                iframe.src = iframe.src;
+            } else {
+                iframe.style.display = 'none';
+            }
+        });
 
         const fileInput = entry.querySelector('#fileInput');
         fileInput.onchange = async (e) => {
