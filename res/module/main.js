@@ -207,12 +207,62 @@ const main = (async () => {
             <textarea rows="2">${item.summary}</textarea><br>
 
             <label>內容</label>
-            <textarea rows="4">${item.content}</textarea><br>
-
-            <div class="content-edit" contenteditable="true">${item.content}</div>
-            
-            <button class="code-space">插入代碼框架</button>
-            <button class="a-space">插入超連結框架</button>
+            <div>
+                <textarea rows="4">${item.content}</textarea><br>
+                <div class="content-tools">
+                    <button class="strong-space">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" viewBox="0 0 24 24" fill="none">
+                            <path d="M6 4V20M9.5 4H15.5C17.7091 4 19.5 5.79086 19.5 8C19.5 10.2091 17.7091 12 15.5 12H9.5H16.5C18.7091 12 20.5 13.7909 20.5 16C20.5 18.2091 18.7091 20 16.5 20H9.5M9.5 4V20M9.5 4H4M9.5 20H4" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </button>
+                    <button class="img-space">
+                        <svg xmlns:x="http://ns.adobe.com/Extensibility/1.0/" xmlns:i="http://ns.adobe.com/AdobeIllustrator/10.0/" xmlns:graph="http://ns.adobe.com/Graphs/1.0/" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:a="http://ns.adobe.com/AdobeSVGViewerExtensions/3.0/" fill="#ffffff" version="1.1" baseProfile="tiny" id="Layer_1" width="20px" height="20px" viewBox="-0.5 0.5 42 42" xml:space="preserve">
+                            <path d="M35.79,31.5c-0.05-0.04-5.181-7.971-6.72-7.971c-1.51,0-4.391,3.851-4.391,3.851c-2.24-2.31-7.2-8.87-8.661-8.87  c-1.509,0-7.449,8.12-10.789,12.99H35.79z M26.811,14.5c0,2.04,1.649,3.69,3.689,3.69s3.689-1.65,3.689-3.69s-1.649-3.69-3.689-3.69  S26.811,12.46,26.811,14.5z M0.5,7.5v27c0,2.52,0.51,3,3,3h34c2.471,0,3-0.46,3-3v-27c0-2.46-0.471-3-3-3h-34  C1.02,4.5,0.5,4.93,0.5,7.5z M3.5,7.5h34v27h-34V7.5z"/>
+                        </svg>
+                    </button>
+                    <button class="span-space">
+                        <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="20px" height="20px" viewBox="0 0 32 32" xml:space="preserve">
+                            <path fill="#ffffff" d="M4,4v24h24V4H4z M6,6h2.444L6,8.444V6z M6,11.272L11.272,6H14.1L6,14.101V11.272z M6,16.929  L16.929,6h2.828L6,19.757V16.929z M6,22.586L22.586,6h2.828L6,25.414V22.586z M26,26h-0.787L26,25.213V26z M26,22.385L22.385,26  h-2.828L26,19.556V22.385z M26,16.728L16.728,26h-2.828L26,13.899V16.728z M26,11.071L11.071,26H8.243L26,8.243V11.071z"/>
+                        </svg>
+                    </button>
+                    <button class="p-space">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" viewBox="0 0 25 25" fill="none">
+                            <path d="M10 17.5H19M6 7.5H19M10 12.5H17M6.5 12V18" stroke="#ffffff" stroke-width="1.2"/>
+                        </svg>
+                    </button>
+                    <button class="table-space">
+                        <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" fill="#ffffff" width="20px" height="20px" viewBox="0 0 36 36" version="1.1" preserveAspectRatio="xMidYMid meet">
+                            <path d="M8,34a1,1,0,0,1-1-1V2.92a1,1,0,0,1,2,0V33A1,1,0,0,1,8,34Z" class="clr-i-outline clr-i-outline-path-1"/><path d="M17,33.92a1,1,0,0,1-1-1V9.1a1,1,0,1,1,2,0V32.92A1,1,0,0,1,17,33.92Z" class="clr-i-outline clr-i-outline-path-2"/><path d="M26,34a1,1,0,0,1-1-1V9a1,1,0,0,1,2,0V33A1,1,0,0,1,26,34Z" class="clr-i-outline clr-i-outline-path-3"/><path d="M33.11,18h-25a1,1,0,1,1,0-2h25a1,1,0,1,1,0,2Z" class="clr-i-outline clr-i-outline-path-4"/><path d="M33.1,26.94H8.1A1,1,0,1,1,8.1,25h25a1,1,0,1,1,0,1.92Z" class="clr-i-outline clr-i-outline-path-5"/><path d="M33,8.92H3A1,1,0,1,1,3,7H33a1,1,0,1,1,0,1.94Z" class="clr-i-outline clr-i-outline-path-6"/>
+                            <rect x="0" y="0" width="36" height="36" fill-opacity="0"/>
+                        </svg>
+                    </button>
+                    <button class="iframe-space">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="#ffffff" width="20px" height="20px" viewBox="0 0 24 24">
+                            <path fill-rule="evenodd" d="M13,20 L20,20 L20,4 L4,4 L4,11 L11,11 C12.1045695,11 13,11.8954305 13,13 L13,20 Z M11,20 L11,13 L4,13 L4,20 L11,20 Z M4,2 L20,2 C21.1045695,2 22,2.8954305 22,4 L22,20 C22,21.1045695 21.1045695,22 20,22 L4,22 C2.8954305,22 2,21.1045695 2,20 L2,4 C2,2.8954305 2.8954305,2 4,2 Z"/>
+                        </svg>
+                    </button>
+                    <button class="h1-space"><h1>A</h1></button>
+                    <button class="h2-space"><h2>A</h2></button>
+                    <button class="h3-space"><h3>A</h3></button>
+                    <button class="h4-space"><h4>A</h4></button>
+                    <button class="h5-space"><h5>A</h5></button>
+                    <button class="h6-space"><h6>A</h6></button>
+                    <button class="code-space">
+                        <svg xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:svg="http://www.w3.org/2000/svg" xmlns="http://www.w3.org/2000/svg" xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" fill="#ffffff" width="20" height="20" viewBox="0 0 30 30" version="1.1" id="svg822" inkscape:version="0.92.4 (f8dce91, 2019-08-02)" sodipodi:docname="code.svg">
+                            <g transform="translate(0,-289.0625)">
+                                <g aria-label="{}" style="font-style:normal;font-weight:normal;font-size:24.25199318px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill-opacity:1;stroke:none;stroke-width:1" id="text892">
+                                    <path style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-family:'Fira Code';-inkscape-font-specification:'Fira Code Bold';stroke-width:1.64934897" d="M 11.779297 3.1171875 C 7.3169299 3.1171875 5.618642 4.3052456 5.9824219 7.6035156 L 6.3476562 11.070312 C 6.5416723 12.889212 5.0614194 13.447266 3 13.447266 L 3 16.552734 C 5.0856714 16.552734 6.5416723 17.110797 6.3476562 18.929688 L 5.9824219 22.421875 C 5.642894 25.671645 7.3169299 26.882812 11.779297 26.882812 L 11.779297 24.214844 C 10.299925 24.214844 9.4021776 23.9001 9.5234375 22.6875 L 9.8867188 19.097656 C 10.177743 16.357176 8.7238695 15.38803 6.1289062 15 C 8.5783575 14.63622 10.177743 13.618564 9.8867188 10.902344 L 9.5234375 7.3125 C 9.4021776 6.0999 10.275673 5.7851562 11.779297 5.7851562 L 11.779297 3.1171875 z M 18.220703 3.1171875 L 18.220703 5.7851562 C 19.700075 5.7851562 20.597823 6.0999 20.476562 7.3125 L 20.113281 10.902344 C 19.822257 13.642814 21.30152 14.61197 23.896484 15 C 21.42278 15.36378 19.822257 16.381436 20.113281 19.097656 L 20.476562 22.6875 C 20.597822 23.9001 19.724327 24.214844 18.220703 24.214844 L 18.220703 26.882812 C 22.68307 26.882812 24.381358 25.694754 24.017578 22.396484 L 23.652344 18.929688 C 23.458328 17.110798 24.962832 16.552734 27 16.552734 L 27 13.447266 C 24.93858 13.447266 23.458328 12.889212 23.652344 11.070312 L 24.017578 7.578125 C 24.357106 4.328365 22.68307 3.1171875 18.220703 3.1171875 z " transform="translate(0,289.0625)" id="path894"/>
+                                </g>
+                            </g>
+                        </svg>
+                    </button>
+                    <button class="a-space">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" viewBox="0 0 24 24" fill="none">
+                            <path d="M14 7H16C18.7614 7 21 9.23858 21 12C21 14.7614 18.7614 17 16 17H14M10 7H8C5.23858 7 3 9.23858 3 12C3 14.7614 5.23858 17 8 17H10M8 12H16" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
 
             <label>圖片連結</label>
             <div class="imageInputs"></div>
@@ -535,197 +585,6 @@ const main = (async () => {
                 }
             }
         }
-        convertSyntaxWithInteractiveEditing(contentEdit);
-        function convertSyntaxWithInteractiveEditing(editable) {
-            // 初始化：轉換整體內容
-            editable.innerHTML = convertSyntaxToHTML(editable.innerHTML);
-
-            // 偵測光標進入或離開
-            document.addEventListener('selectionchange', () => {
-                const sel = window.getSelection();
-                if (!sel.rangeCount) return;
-
-                const range = sel.getRangeAt(0);
-                const node = range.startContainer;
-                const current = node.nodeType === 3 ? node.parentNode : node;
-
-                // 還原：光標進入 data-original 區塊
-                if (current.hasAttribute?.('data-original')) {
-                    const originalText = current.getAttribute('data-original');
-                    const span = document.createElement('span');
-                    span.textContent = originalText;
-                    span.setAttribute('data-revert', 'true');
-                    current.replaceWith(span);
-
-                    const newRange = document.createRange();
-                    newRange.selectNodeContents(span);
-                    newRange.collapse(false);
-                    sel.removeAllRanges();
-                    sel.addRange(newRange);
-                    return;
-                }
-
-                // 恢復：光標離開 data-revert 區塊
-                const allReverts = editable.querySelectorAll('[data-revert]');
-                allReverts.forEach(el => {
-                    if (!el.contains(node)) {
-                        const html = convertSyntaxToHTML(el.textContent);
-                        const temp = document.createElement('div');
-                        temp.innerHTML = html;
-
-                        const fragment = document.createDocumentFragment();
-                        while (temp.firstChild) {
-                            fragment.appendChild(temp.firstChild);
-                        }
-                        el.replaceWith(fragment);
-                    }
-                });
-            });
-
-            // 主轉換函式：先容器語法再內容語法
-            function convertSyntaxToHTML(text) {
-                // 先處理容器語法（不遞迴）
-                text = convertToParagraphWithSize(text);
-                text = convertToSpanWithSize(text);
-                text = convertToStrong(text);
-                text = convertToHeadings(text);
-                text = convertToTable(text);
-                text = convertToCodeBlocks(text);
-                text = convertToIframes(text);
-
-                // 再處理內容語法（不遞迴）
-                text = convertToLinksNewTab(text);
-                text = convertToLinks(text);
-                text = convertToImages(text);
-
-                // 最後處理換行
-                text = text.replace(/\n/g, "<br>");
-                return text;
-            }
-
-            function wrapWithOriginal(html, originalText) {
-                const escaped = escapeHTML(originalText);
-                return html.replace(/^(<\w+)/, `$1 data-original="${escaped}"`);
-            }
-
-            function convertToParagraphWithSize(text) {
-                return text
-                    .replace(/\[p:(\d+)\[\[([\s\S]*?)\]\]\]/g,
-                        (match, size, content) => {
-                            const fontSize = Math.min(parseInt(size, 10), 72);
-                            return wrapWithOriginal(
-                                `<p style="font-size:${fontSize}px">${content.trim()}</p>`, match);
-                        })
-                    .replace(/\[p\[\[([\s\S]*?)\]\]\]/g,
-                        (match, content) => wrapWithOriginal(
-                            `<p>${content.trim()}</p>`, match));
-            }
-
-            function convertToSpanWithSize(text) {
-                return text
-                    .replace(/\[span:(\d+)\[\[([\s\S]*?)\]\]\]/g,
-                        (match, size, content) => {
-                            const fontSize = Math.min(parseInt(size, 10), 72);
-                            return wrapWithOriginal(
-                                `<span style="font-size:${fontSize}px">${content.trim()}</span>`, match);
-                        })
-                    .replace(/\[span\[\[([\s\S]*?)\]\]\]/g,
-                        (match, content) => wrapWithOriginal(
-                            `<span>${content.trim()}</span>`, match));
-            }
-
-            function convertToStrong(text) {
-                return text
-                    .replace(/\[strong:(\d+)\[\[([\s\S]*?)\]\]\]/g,
-                        (match, size, content) => {
-                            const fontSize = Math.min(parseInt(size, 10), 72);
-                            return wrapWithOriginal(
-                                `<strong style="font-size:${fontSize}px">${content.trim()}</strong>`, match);
-                        })
-                    .replace(/\[strong\[\[([\s\S]*?)\]\]\]/g,
-                        (match, content) => wrapWithOriginal(
-                            `<strong>${content.trim()}</strong>`, match));
-            }
-
-            function convertToHeadings(text) {
-                return text.replace(/\[(h[1-6])\[\[([\s\S]*?)\]\]\]/g,
-                    (match, tag, content) => wrapWithOriginal(
-                        `<${tag}>${content.trim()}</${tag}>`, match));
-            }
-
-            function convertToTable(text) {
-                return text.replace(
-                    /(?:^|\n)(?:(?:[^\n]*\|[^\n]*)\n?){2,}/g,
-                    match => {
-                        if (/<pre[\s\S]*?>[\s\S]*$/.test(text.split(match)[0]) &&
-                            /<\/pre>/.test(text.split(match)[1])) {
-                            return match;
-                        }
-
-                        const rows = match.trim().split('\n');
-                        const tableRows = rows.map((line, index) => {
-                            const cleanedLine = line.trim().replace(/^(\|)+|(\|)+$/g, '');
-                            const cells = cleanedLine.split('|').map(cell => cell.trim());
-                            const tag = index === 0 ? 'th' : 'td';
-                            const rowHtml = cells.map(cell => `<${tag}>${cell}</${tag}>`).join('');
-                            return `<tr>${rowHtml}</tr>`;
-                        });
-
-                        return wrapWithOriginal(`<table>${tableRows.join('')}</table>`, match);
-                    }
-                );
-            }
-
-            function convertToCodeBlocks(text) {
-                return text.replace(/\[code:([^\[\]]+)\[\[([\s\S]*?)\]\]\]/g,
-                    (match, lang, content) => wrapWithOriginal(
-                        `<pre><code class="${lang}">${escapeHTML(content)}</code></pre>`, match));
-            }
-
-            function convertToIframes(text) {
-                return text.replace(/\(iframe:([^\[\]]+)\[\[([\s\S]*?)\]\]\)/g,
-                    (match, attrString, url) => {
-                        const attrs = extractWidthHeight(attrString.trim());
-                        return wrapWithOriginal(
-                            `<iframe ${attrs} src="${url.trim()}" loading="lazy" referrerpolicy="no-referrer"></iframe>`, match);
-                    });
-
-                function extractWidthHeight(attrString) {
-                    const widthMatch = attrString.match(/width=["']([^"']+)["']/);
-                    const heightMatch = attrString.match(/height=["']([^"']+)["']/);
-                    const width = widthMatch ? `width="${escapeHTML(widthMatch[1])}"` : '';
-                    const height = heightMatch ? `height="${escapeHTML(heightMatch[1])}"` : '';
-                    return [width, height].filter(Boolean).join(' ');
-                }
-            }
-
-            function convertToLinksNewTab(text) {
-                return text.replace(/\[\+a:([^\[\]]+)\[\[([\s\S]*?)\]\]\]/g,
-                    (match, href, content) => wrapWithOriginal(
-                        `<a href="${href.trim()}" target="_blank" rel="noopener noreferrer">${content.trim()}</a>`, match));
-            }
-
-            function convertToLinks(text) {
-                return text.replace(/\[a:([^\[\]]+)\[\[([\s\S]*?)\]\]\]/g,
-                    (match, href, content) => wrapWithOriginal(
-                        `<a href="${href.trim()}">${content.trim()}</a>`, match));
-            }
-
-            function convertToImages(text) {
-                return text.replace(/\[img:([^\[\]]+)\[\[([\s\S]*?)\]\]\]/g,
-                    (match, src, alt) => wrapWithOriginal(
-                        `<img src="${src.trim()}" alt="${alt.trim()}" loading="lazy" />`, match));
-            }
-
-            function escapeHTML(str) {
-                return str
-                    .replace(/&/g, "&amp;")
-                    .replace(/</g, "&lt;")
-                    .replace(/>/g, "&gt;")
-                    .replace(/"/g, "&quot;")
-                    .replace(/'/g, "&#039;");
-            }
-        }
 
         const entryTextareas = entry.querySelectorAll("textarea");
         entryTextareas.forEach(textareaUtils.autoResizeTextarea);
@@ -770,15 +629,12 @@ const main = (async () => {
             e.preventDefault();
 
             if (lastFocusedInput) {
-                const insertText = '<pre><code>請放入代碼</code></pre>';
-                const start = lastFocusedInput.selectionStart;
-                const end = lastFocusedInput.selectionEnd;
-                const originalText = lastFocusedInput.value;
-
-                lastFocusedInput.value = originalText.slice(0, start) + insertText + originalText.slice(end);
-                lastFocusedInput.focus();
-                lastFocusedInput.setSelectionRange(start + 11, start + insertText.length - 13);
-
+                insertSyntaxFlexible(
+                    lastFocusedInput,
+                    '[code:language-csharp[[請放入代碼]]]',
+                    '請放入代碼',
+                    '請放入代碼'
+                );
             }
 
         };
@@ -786,20 +642,155 @@ const main = (async () => {
         const entryASpace = entry.querySelector('.a-space');
         entryASpace.onclick = (e) => {
             e.preventDefault();
-
             if (lastFocusedInput) {
-                const insertText = '<a href="放入超連結" target="_blank">超連結名稱</a>';
-                const start = lastFocusedInput.selectionStart;
-                const end = lastFocusedInput.selectionEnd;
-                const originalText = lastFocusedInput.value;
-
-                lastFocusedInput.value = originalText.slice(0, start) + insertText + originalText.slice(end);
-                lastFocusedInput.focus();
-                lastFocusedInput.setSelectionRange(start + 9, start + insertText.length - 27);
-
+                insertSyntaxFlexible(
+                    lastFocusedInput,
+                    '[+a:連結[[名稱]]]',
+                    '名稱',
+                    '連結'
+                );
             }
-
         };
+
+        const entryPSpace = entry.querySelector('.p-space');
+        entryPSpace.onclick = (e) => {
+            e.preventDefault();
+            if (lastFocusedInput) {
+                insertSyntaxFlexible(
+                    lastFocusedInput,
+                    '[p:12[[引用文字]]]',
+                    '引用文字',
+                    '引用文字'
+                );
+            }
+        };
+
+        const entrySpanSpace = entry.querySelector('.span-space');
+        entrySpanSpace.onclick = (e) => {
+            e.preventDefault();
+            if (lastFocusedInput) {
+                insertSyntaxFlexible(
+                    lastFocusedInput,
+                    '[span:12[[文字]]]',
+                    '文字',
+                    '文字'
+                );
+            }
+        };
+
+        const entryIframeSpace = entry.querySelector('.iframe-space');
+        entryIframeSpace.onclick = (e) => {
+            e.preventDefault();
+            if (lastFocusedInput) {
+                insertSyntaxFlexible(
+                    lastFocusedInput,
+                    '(iframe:width="100%"[[連結]])',
+                    '連結',
+                    '連結'
+                );
+            }
+        };
+
+        const entryImgSpace = entry.querySelector('.img-space');
+        entryImgSpace.onclick = (e) => {
+            e.preventDefault();
+            if (lastFocusedInput) {
+                insertSyntaxFlexible(
+                    lastFocusedInput,
+                    '[img:連結[[]]]',
+                    '連結',
+                    '連結'
+                );
+            }
+        };
+
+        const entryH1Space = entry.querySelector('.h1-space');
+        entryH1Space.onclick = (e) => {
+            headerSpace(e, 1);
+        };
+        const entryH2Space = entry.querySelector('.h2-space');
+        entryH2Space.onclick = (e) => {
+            headerSpace(e, 2);
+        };
+        const entryH3Space = entry.querySelector('.h3-space');
+        entryH3Space.onclick = (e) => {
+            headerSpace(e, 3);
+        };
+        const entryH4Space = entry.querySelector('.h4-space');
+        entryH4Space.onclick = (e) => {
+            headerSpace(e, 4);
+        };
+        const entryH5Space = entry.querySelector('.h5-space');
+        entryH5Space.onclick = (e) => {
+            headerSpace(e, 5);
+        };
+        const entryH6Space = entry.querySelector('.h6-space');
+        entryH6Space.onclick = (e) => {
+            headerSpace(e, 6);
+        };
+        function headerSpace(e, num) {
+            e.preventDefault();
+            if (lastFocusedInput) {
+                insertSyntaxFlexible(
+                    lastFocusedInput,
+                    `[h${num}[[文字]]]`,
+                    '文字',
+                    '文字'
+                );
+            }
+        }
+
+        const entryTableSpace = entry.querySelector('.table-space');
+        entryTableSpace.onclick = (e) => {
+            e.preventDefault();
+            if (lastFocusedInput) {
+                insertSyntaxFlexible(
+                    lastFocusedInput,
+                    '|表格一|表格二|\n|內容一|內容二',
+                    '表格一',
+                    '表格一'
+                );
+            }
+        };
+
+        const entryStrongSpace = entry.querySelector('.strong-space');
+        entryStrongSpace.onclick = (e) => {
+            e.preventDefault();
+            if (lastFocusedInput) {
+                insertSyntaxFlexible(
+                    lastFocusedInput,
+                    '[strong:12[[文字]]]',
+                    '文字',
+                    '文字'
+                );
+            }
+        };
+        function insertSyntaxFlexible(inputElement, syntaxTemplate, replaceTarget, selectTarget) {
+            const start = inputElement.selectionStart;
+            const end = inputElement.selectionEnd;
+            const originalText = inputElement.value;
+            const selectedText = originalText.slice(start, end);
+
+            const replacedText = selectedText || replaceTarget;
+            const filledSyntax = syntaxTemplate.replace(replaceTarget, replacedText);
+
+            inputElement.value =
+                originalText.slice(0, start) +
+                filledSyntax +
+                originalText.slice(end);
+
+            inputElement.focus();
+
+            const insertedStart = start;
+            const insertedEnd = start + filledSyntax.length;
+
+            // 重新計算 selectTarget 在 filledSyntax 中的位置
+            const selectIndexInFilled = filledSyntax.indexOf(selectTarget);
+            const keywordStart = insertedStart + selectIndexInFilled;
+            const keywordEnd = keywordStart + selectTarget.length;
+
+            inputElement.setSelectionRange(keywordStart, keywordEnd);
+        }
 
         const imageInputsDiv = entry.querySelector('.imageInputs');
         const imagePreviewDiv = entry.querySelector('.images');

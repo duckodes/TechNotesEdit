@@ -130,6 +130,33 @@ img {
     color: #333;
 }
 
+.content-tools {
+    position: sticky;
+    bottom: 0px;
+    display: flex;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    width: 98.25%;
+}
+
+.content-tools button {
+    margin: 1px;
+    box-shadow: 1px 1px 2px #202020;
+}
+
+.content-tools h1,
+.content-tools h2,
+.content-tools h3,
+.content-tools h4,
+.content-tools h5,
+.content-tools h6 {
+    margin: 0;
+}
+
+.content-tools button:active {
+    box-shadow: inset 1px 1px 2px #202020;
+}
+
 #manualEditor {
     border: 1px solid #ccc;
     padding: 1em;
@@ -180,7 +207,7 @@ img {
 .content-input-preview {
     width: fit-content;
     transform: scale(1.5);
-    margin-left: 15px; 
+    margin-left: 15px;
 }
 
 #tagInputContainer {
