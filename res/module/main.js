@@ -208,6 +208,8 @@ const main = (async () => {
 
             <label>內容</label>
             <textarea rows="4">${item.content}</textarea><br>
+
+            <div class="content-edit" contenteditable="true">${item.content}</div>
             
             <button class="code-space">插入代碼框架</button>
             <button class="a-space">插入超連結框架</button>
@@ -416,6 +418,314 @@ const main = (async () => {
         }
 
         container.appendChild(entry);
+
+        const contentEdit = entry.querySelector('.content-edit');
+        function convertSyntaxToHTML(element) {
+            element.innerHTML = convertToTable(element.innerHTML);
+            element.innerHTML = convertToLinksNewTab(element.innerHTML);
+            element.innerHTML = convertToLinks(element.innerHTML);
+            element.innerHTML = convertToImages(element.innerHTML);
+            element.innerHTML = convertToHeadings(element.innerHTML);
+            element.innerHTML = convertToStrong(element.innerHTML);
+            element.innerHTML = convertToSpanWithSize(element.innerHTML);
+            element.innerHTML = convertToParagraphWithSize(element.innerHTML);
+            element.innerHTML = convertToCodeBlocks(element.innerHTML);
+            element.innerHTML = convertToIframes(element.innerHTML);
+            element.innerHTML = element.innerHTML.replace(/\n/g, "<br>");
+
+            function convertToTable(text) {
+                return text.replace(
+                    /(?:^|\n)(?:(?:[^\n]*\|[^\n]*)\n?){2,}/g,
+                    match => {
+                        // 檢查是否在 <pre> 或 <code> 區塊內（簡單防禦）
+                        if (/<pre[\s\S]*?>[\s\S]*$/.test(text.split(match)[0]) &&
+                            /<\/pre>/.test(text.split(match)[1])) {
+                            return match; // 不處理 <pre> 內的內容
+                        }
+
+                        const rows = match.trim().split('\n');
+                        const tableRows = rows.map((line, index) => {
+                            const cleanedLine = line.trim().replace(/^(\|)+|(\|)+$/g, '');
+                            const cells = cleanedLine.split('|').map(cell => cell.trim());
+                            const tag = index === 0 ? 'th' : 'td';
+                            const rowHtml = cells.map(cell => `<${tag}>${cell}</${tag}>`).join('');
+                            return `<tr>${rowHtml}</tr>`;
+                        });
+
+                        return `<table>${tableRows.join('')}</table>`;
+                    }
+                );
+            }
+            function convertToLinks(text) {
+                return text.replace(/\[a:([^\[\]]+)\[\[([\s\S]*?)\]\]\]/g, (match, href, content) => {
+                    return `<a href="${href.trim()}">${content.trim()}</a>`;
+                });
+            }
+            function convertToLinksNewTab(text) {
+                return text.replace(/\[\+a:([^\[\]]+)\[\[([\s\S]*?)\]\]\]/g, (match, href, content) => {
+                    return `<a href="${href.trim()}" target="_blank" rel="noopener noreferrer">${content.trim()}</a>`;
+                });
+            }
+            function convertToImages(text) {
+                return text.replace(/\[img:([^\[\]]+)\[\[([\s\S]*?)\]\]\]/g, (match, src, alt) => {
+                    return `<img src="${src.trim()}" alt="${alt.trim()}" loading="lazy" />`;
+                });
+            }
+            function convertToHeadings(text) {
+                return text.replace(/\[(h[1-6])\[\[([\s\S]*?)\]\]\]/g, (match, tag, content) => {
+                    return `<${tag}>${content.trim()}</${tag}>`;
+                });
+            }
+            function convertToSpanWithSize(text) {
+                return text
+                    .replace(/\[span:(\d+)\[\[([\s\S]*?)\]\]\]/g, (match, size, content) => {
+                        const fontSize = Math.min(parseInt(size, 10), 72);
+                        return `<span style="font-size:${fontSize}px">${content.trim()}</span>`;
+                    })
+                    .replace(/\[span\[\[([\s\S]*?)\]\]\]/g, (match, content) => {
+                        return `<span>${content.trim()}</span>`;
+                    });
+            }
+            function convertToParagraphWithSize(text) {
+                return text
+                    .replace(/\[p:(\d+)\[\[([\s\S]*?)\]\]\]/g, (match, size, content) => {
+                        const fontSize = Math.min(parseInt(size, 10), 72);
+                        return `<p style="font-size:${fontSize}px">${content.trim()}</p>`;
+                    })
+                    .replace(/\[p\[\[([\s\S]*?)\]\]\]/g, (match, content) => {
+                        return `<p>${content.trim()}</p>`;
+                    });
+            }
+            function convertToStrong(text) {
+                return text
+                    .replace(/\[strong:(\d+)\[\[([\s\S]*?)\]\]\]/g, (match, size, content) => {
+                        const fontSize = Math.min(parseInt(size, 10), 72);
+                        return `<strong style="font-size:${fontSize}px">${content.trim()}</strong>`;
+                    })
+                    .replace(/\[strong\[\[([\s\S]*?)\]\]\]/g, (match, content) => {
+                        return `<strong>${content.trim()}</strong>`;
+                    });
+            }
+            function escapeHTML(str) {
+                return str
+                    .replace(/&/g, "&amp;")
+                    .replace(/</g, "&lt;")
+                    .replace(/>/g, "&gt;")
+                    .replace(/"/g, "&quot;")
+                    .replace(/'/g, "&#039;");
+            }
+            function convertToCodeBlocks(text) {
+                return text.replace(/\[code:([^\[\]]+)\[\[([\s\S]*?)\]\]\]/g, (match, language, content) => {
+                    return `<pre><code class="${language}">${content}</code></pre>`;
+                });
+            }
+            function convertToIframes(text) {
+                return text.replace(/\(iframe:([^\[\]]+)\[\[([\s\S]*?)\]\]\)/g, (match, attrString, url) => {
+                    const attrs = extractWidthHeight(attrString.trim());
+                    return `<iframe ${attrs} src="${url.trim()}" loading="lazy" referrerpolicy="no-referrer"></iframe>`;
+                });
+                function extractWidthHeight(attrString) {
+                    const widthMatch = attrString.match(/width=["']([^"']+)["']/);
+                    const heightMatch = attrString.match(/height=["']([^"']+)["']/);
+
+                    const width = widthMatch ? `width="${escapeHTML(widthMatch[1])}"` : '';
+                    const height = heightMatch ? `height="${escapeHTML(heightMatch[1])}"` : '';
+
+                    return [width, height].filter(Boolean).join(' ');
+                }
+            }
+        }
+        convertSyntaxWithInteractiveEditing(contentEdit);
+        function convertSyntaxWithInteractiveEditing(editable) {
+            // 初始化：轉換整體內容
+            editable.innerHTML = convertSyntaxToHTML(editable.innerHTML);
+
+            // 偵測光標進入或離開
+            document.addEventListener('selectionchange', () => {
+                const sel = window.getSelection();
+                if (!sel.rangeCount) return;
+
+                const range = sel.getRangeAt(0);
+                const node = range.startContainer;
+                const current = node.nodeType === 3 ? node.parentNode : node;
+
+                // 還原：光標進入 data-original 區塊
+                if (current.hasAttribute?.('data-original')) {
+                    const originalText = current.getAttribute('data-original');
+                    const span = document.createElement('span');
+                    span.textContent = originalText;
+                    span.setAttribute('data-revert', 'true');
+                    current.replaceWith(span);
+
+                    const newRange = document.createRange();
+                    newRange.selectNodeContents(span);
+                    newRange.collapse(false);
+                    sel.removeAllRanges();
+                    sel.addRange(newRange);
+                    return;
+                }
+
+                // 恢復：光標離開 data-revert 區塊
+                const allReverts = editable.querySelectorAll('[data-revert]');
+                allReverts.forEach(el => {
+                    if (!el.contains(node)) {
+                        const html = convertSyntaxToHTML(el.textContent);
+                        const temp = document.createElement('div');
+                        temp.innerHTML = html;
+
+                        const fragment = document.createDocumentFragment();
+                        while (temp.firstChild) {
+                            fragment.appendChild(temp.firstChild);
+                        }
+                        el.replaceWith(fragment);
+                    }
+                });
+            });
+
+            // 主轉換函式：先容器語法再內容語法
+            function convertSyntaxToHTML(text) {
+                // 先處理容器語法（不遞迴）
+                text = convertToParagraphWithSize(text);
+                text = convertToSpanWithSize(text);
+                text = convertToStrong(text);
+                text = convertToHeadings(text);
+                text = convertToTable(text);
+                text = convertToCodeBlocks(text);
+                text = convertToIframes(text);
+
+                // 再處理內容語法（不遞迴）
+                text = convertToLinksNewTab(text);
+                text = convertToLinks(text);
+                text = convertToImages(text);
+
+                // 最後處理換行
+                text = text.replace(/\n/g, "<br>");
+                return text;
+            }
+
+            function wrapWithOriginal(html, originalText) {
+                const escaped = escapeHTML(originalText);
+                return html.replace(/^(<\w+)/, `$1 data-original="${escaped}"`);
+            }
+
+            function convertToParagraphWithSize(text) {
+                return text
+                    .replace(/\[p:(\d+)\[\[([\s\S]*?)\]\]\]/g,
+                        (match, size, content) => {
+                            const fontSize = Math.min(parseInt(size, 10), 72);
+                            return wrapWithOriginal(
+                                `<p style="font-size:${fontSize}px">${content.trim()}</p>`, match);
+                        })
+                    .replace(/\[p\[\[([\s\S]*?)\]\]\]/g,
+                        (match, content) => wrapWithOriginal(
+                            `<p>${content.trim()}</p>`, match));
+            }
+
+            function convertToSpanWithSize(text) {
+                return text
+                    .replace(/\[span:(\d+)\[\[([\s\S]*?)\]\]\]/g,
+                        (match, size, content) => {
+                            const fontSize = Math.min(parseInt(size, 10), 72);
+                            return wrapWithOriginal(
+                                `<span style="font-size:${fontSize}px">${content.trim()}</span>`, match);
+                        })
+                    .replace(/\[span\[\[([\s\S]*?)\]\]\]/g,
+                        (match, content) => wrapWithOriginal(
+                            `<span>${content.trim()}</span>`, match));
+            }
+
+            function convertToStrong(text) {
+                return text
+                    .replace(/\[strong:(\d+)\[\[([\s\S]*?)\]\]\]/g,
+                        (match, size, content) => {
+                            const fontSize = Math.min(parseInt(size, 10), 72);
+                            return wrapWithOriginal(
+                                `<strong style="font-size:${fontSize}px">${content.trim()}</strong>`, match);
+                        })
+                    .replace(/\[strong\[\[([\s\S]*?)\]\]\]/g,
+                        (match, content) => wrapWithOriginal(
+                            `<strong>${content.trim()}</strong>`, match));
+            }
+
+            function convertToHeadings(text) {
+                return text.replace(/\[(h[1-6])\[\[([\s\S]*?)\]\]\]/g,
+                    (match, tag, content) => wrapWithOriginal(
+                        `<${tag}>${content.trim()}</${tag}>`, match));
+            }
+
+            function convertToTable(text) {
+                return text.replace(
+                    /(?:^|\n)(?:(?:[^\n]*\|[^\n]*)\n?){2,}/g,
+                    match => {
+                        if (/<pre[\s\S]*?>[\s\S]*$/.test(text.split(match)[0]) &&
+                            /<\/pre>/.test(text.split(match)[1])) {
+                            return match;
+                        }
+
+                        const rows = match.trim().split('\n');
+                        const tableRows = rows.map((line, index) => {
+                            const cleanedLine = line.trim().replace(/^(\|)+|(\|)+$/g, '');
+                            const cells = cleanedLine.split('|').map(cell => cell.trim());
+                            const tag = index === 0 ? 'th' : 'td';
+                            const rowHtml = cells.map(cell => `<${tag}>${cell}</${tag}>`).join('');
+                            return `<tr>${rowHtml}</tr>`;
+                        });
+
+                        return wrapWithOriginal(`<table>${tableRows.join('')}</table>`, match);
+                    }
+                );
+            }
+
+            function convertToCodeBlocks(text) {
+                return text.replace(/\[code:([^\[\]]+)\[\[([\s\S]*?)\]\]\]/g,
+                    (match, lang, content) => wrapWithOriginal(
+                        `<pre><code class="${lang}">${escapeHTML(content)}</code></pre>`, match));
+            }
+
+            function convertToIframes(text) {
+                return text.replace(/\(iframe:([^\[\]]+)\[\[([\s\S]*?)\]\]\)/g,
+                    (match, attrString, url) => {
+                        const attrs = extractWidthHeight(attrString.trim());
+                        return wrapWithOriginal(
+                            `<iframe ${attrs} src="${url.trim()}" loading="lazy" referrerpolicy="no-referrer"></iframe>`, match);
+                    });
+
+                function extractWidthHeight(attrString) {
+                    const widthMatch = attrString.match(/width=["']([^"']+)["']/);
+                    const heightMatch = attrString.match(/height=["']([^"']+)["']/);
+                    const width = widthMatch ? `width="${escapeHTML(widthMatch[1])}"` : '';
+                    const height = heightMatch ? `height="${escapeHTML(heightMatch[1])}"` : '';
+                    return [width, height].filter(Boolean).join(' ');
+                }
+            }
+
+            function convertToLinksNewTab(text) {
+                return text.replace(/\[\+a:([^\[\]]+)\[\[([\s\S]*?)\]\]\]/g,
+                    (match, href, content) => wrapWithOriginal(
+                        `<a href="${href.trim()}" target="_blank" rel="noopener noreferrer">${content.trim()}</a>`, match));
+            }
+
+            function convertToLinks(text) {
+                return text.replace(/\[a:([^\[\]]+)\[\[([\s\S]*?)\]\]\]/g,
+                    (match, href, content) => wrapWithOriginal(
+                        `<a href="${href.trim()}">${content.trim()}</a>`, match));
+            }
+
+            function convertToImages(text) {
+                return text.replace(/\[img:([^\[\]]+)\[\[([\s\S]*?)\]\]\]/g,
+                    (match, src, alt) => wrapWithOriginal(
+                        `<img src="${src.trim()}" alt="${alt.trim()}" loading="lazy" />`, match));
+            }
+
+            function escapeHTML(str) {
+                return str
+                    .replace(/&/g, "&amp;")
+                    .replace(/</g, "&lt;")
+                    .replace(/>/g, "&gt;")
+                    .replace(/"/g, "&quot;")
+                    .replace(/'/g, "&#039;");
+            }
+        }
 
         const entryTextareas = entry.querySelectorAll("textarea");
         entryTextareas.forEach(textareaUtils.autoResizeTextarea);
