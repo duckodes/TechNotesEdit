@@ -49,7 +49,8 @@ label {
 }
 
 input,
-textarea {
+textarea,
+.content-display {
     width: 97%;
     padding: 0.5em;
     margin-top: 0.2em;
@@ -58,6 +59,7 @@ textarea {
     font-size: 1em;
     resize: none;
     overflow: hidden;
+    font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
 }
 
 img {
@@ -101,6 +103,7 @@ img {
 
 .login-container button {
     width: 100%;
+    margin: 0;
     padding: 10px;
     background-color: #007bff;
     color: #fff;
@@ -113,7 +116,8 @@ img {
     cursor: pointer;
     width: fit-content;
     display: flex;
-    justify-self: end;
+    justify-self: flex-end;
+    margin-bottom: 5px;
 }
 
 .login-container .login-status:hover {
@@ -130,10 +134,55 @@ img {
     color: #333;
 }
 
+.content-display {
+    display: block;
+    flex-direction: column;
+}
+
+.content-display h1,
+.content-display h2,
+.content-display h3,
+.content-display h4,
+.content-display h5,
+.content-display h6 {
+    margin: 0;
+}
+
+.content-display p {
+    border-left: 5px solid var(--border);
+    padding-left: 5px;
+    margin: 0;
+}
+
+.content-display span:not(code span) {
+    display: inline-block;
+    line-height: 1;
+    vertical-align: middle;
+    font-family: 'JetBrains Mono', 'Courier New', monospace;
+    background-color: var(--border);
+    padding: 5px;
+    margin: 0px 5px;
+    border-radius: 5px;
+}
+
+.content-display table {
+    border-collapse: collapse;
+    border-spacing: 0;
+}
+
+.content-display td,
+.content-display th {
+    border: 2px solid var(--border);
+}
+
+.content-edit {
+    display: none;
+}
+
 .content-tools {
     position: sticky;
     bottom: 0px;
-    display: flex;
+    display: none;
     justify-content: flex-end;
     flex-wrap: wrap;
     width: 98.25%;
@@ -141,6 +190,12 @@ img {
 
 .content-tools button {
     margin: 1px;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     box-shadow: 1px 1px 2px #202020;
 }
 
@@ -199,6 +254,14 @@ img {
     background: #fff;
 }
 
+.content-begin-images {
+    border: 1px solid #ccc;
+    padding: 1em;
+    margin-bottom: 1em;
+    background: #fff;
+    border-radius: 4px;
+}
+
 .content-preview {
     display: flex;
     align-items: end;
@@ -235,6 +298,17 @@ img {
     font-size: 14px;
     display: flex;
     align-items: center;
+    background-color: var(--border);
+    border-radius: 25px;
+    padding-left: 20px;
+    user-select: none;
+}
+
+.tag button {
+    padding: 0;
+    width: 25px;
+    height: 25px;
+    border-radius: 100%;
 }
 
 #suggestions {
@@ -246,6 +320,7 @@ img {
     position: absolute;
     z-index: 10;
     width: 200px;
+    display: none;
 }
 
 .suggestion {

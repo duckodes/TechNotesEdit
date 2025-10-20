@@ -1,0 +1,61 @@
+:root {
+    --border: #ddd;
+}
+
+::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #35353590;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #353535dd;
+}
+
+::-webkit-scrollbar-corner {
+    background-color: var(--bg);
+}
+
+::selection {
+    color: white;
+    background-color: #3498db;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+pre {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    background-color: #1e1e1e;
+    color: #ffffff;
+    font-family: 'JetBrains Mono', 'Courier New', monospace;
+    font-size: 0.95em;
+    padding: 16px;
+    border-radius: 6px;
+    border: 1px solid #333;
+    width: 100%;
+    box-sizing: border-box;
+    white-space: pre;
+    overflow-x: auto;
+    display: block;
+    contain: inline-size;
+}
+
+pre code {
+    background: none;
+    color: inherit;
+    padding: 0;
+    border: none;
+}
+
+pre code .no-select {
+    user-select: none;
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+}

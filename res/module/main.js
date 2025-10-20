@@ -197,7 +197,7 @@ const main = (async () => {
         entry.className = 'entry';
 
         entry.innerHTML = `
-            <div class="date">分類: ${category} 第${index}筆資料</div>
+            <div class="date">分類: <select class="recategory" style="margin-right: 10px;"></select> 第${index}筆資料</div>
             <br>
             
             <label>標題</label>
@@ -208,8 +208,24 @@ const main = (async () => {
 
             <label>內容</label>
             <div>
-                <textarea rows="4">${item.content}</textarea><br>
+                <div class="content-display" contenteditable="true"></div>
+                <textarea class="content-edit" rows="4">${item.content}</textarea><br>
                 <div class="content-tools">
+                    <button class="disc-list-space">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 32 32"><path fill="none" stroke="#ffffff" stroke-linecap="round" stroke-width="2" d="M12 8h15m-15 8h9m-9 8h15M7 24a1 1 0 1 1-2 0a1 1 0 0 1 2 0Zm0-8a1 1 0 1 1-2 0a1 1 0 0 1 2 0Zm0-8a1 1 0 1 1-2 0a1 1 0 0 1 2 0Z"></path></svg>
+                    </button>
+                    <button class="decimal-list-space">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256"><path fill="#ffffff" d="M224 120v16a8 8 0 0 1-8 8H104a8 8 0 0 1-8-8v-16a8 8 0 0 1 8-8h112a8 8 0 0 1 8 8Zm-8-72H104a8 8 0 0 0-8 8v16a8 8 0 0 0 8 8h112a8 8 0 0 0 8-8V56a8 8 0 0 0-8-8Zm0 128H104a8 8 0 0 0-8 8v16a8 8 0 0 0 8 8h112a8 8 0 0 0 8-8v-16a8 8 0 0 0-8-8ZM43.58 55.16L48 52.94V104a8 8 0 0 0 16 0V40a8 8 0 0 0-11.58-7.16l-16 8a8 8 0 0 0 7.16 14.32Zm36.19 101.56a23.73 23.73 0 0 0-9.6-15.95a24.86 24.86 0 0 0-34.11 4.7a23.63 23.63 0 0 0-3.57 6.46a8 8 0 1 0 15 5.47a7.84 7.84 0 0 1 1.18-2.13a8.76 8.76 0 0 1 12-1.59a7.91 7.91 0 0 1 3.26 5.32a7.64 7.64 0 0 1-1.57 5.78a1 1 0 0 0-.08.11l-28.69 38.32A8 8 0 0 0 40 216h32a8 8 0 0 0 0-16H56l19.08-25.53a23.47 23.47 0 0 0 4.69-17.75Z"></path></svg>
+                    </button>
+                    <button class="square-list-space">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"><path fill="#ffffff" d="M1 4h2v2H1V4zm4 0h14v2H5V4zM1 9h2v2H1V9zm4 0h14v2H5V9zm-4 5h2v2H1v-2zm4 0h14v2H5v-2z"></path></svg>
+                    </button>
+                    <button class="circle-list-space">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"><path fill="currentColor" d="M20.438 6.062h-9a.5.5 0 0 1 0-1h9a.5.5 0 0 1 0 1Zm0 6.438h-9a.5.5 0 0 1 0-1h9a.5.5 0 0 1 0 1Zm0 6.435h-9a.5.5 0 1 1 0-1h9a.5.5 0 0 1 0 1ZM5.562 8.062a2.5 2.5 0 1 1 2.5-2.5a2.5 2.5 0 0 1-2.5 2.5Zm0-4a1.5 1.5 0 1 0 1.5 1.5a1.5 1.5 0 0 0-1.5-1.5Zm0 10.438a2.5 2.5 0 1 1 2.5-2.5a2.5 2.5 0 0 1-2.5 2.5Zm0-4a1.5 1.5 0 1 0 1.5 1.5a1.5 1.5 0 0 0-1.5-1.5Zm0 10.438a2.5 2.5 0 1 1 2.5-2.5a2.5 2.5 0 0 1-2.5 2.5Zm0-4a1.5 1.5 0 1 0 1.5 1.5a1.5 1.5 0 0 0-1.5-1.5Z"/></svg>
+                    </button>
+                    <button class="none-list-space">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 16 16"><path fill="#ffffff" fill-rule="evenodd" d="M2.5 12a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5z"></path></svg>
+                    </button>
                     <button class="strong-space">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" viewBox="0 0 24 24" fill="none">
                             <path d="M6 4V20M9.5 4H15.5C17.7091 4 19.5 5.79086 19.5 8C19.5 10.2091 17.7091 12 15.5 12H9.5H16.5C18.7091 12 20.5 13.7909 20.5 16C20.5 18.2091 18.7091 20 16.5 20H9.5M9.5 4V20M9.5 4H4M9.5 20H4" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -264,23 +280,16 @@ const main = (async () => {
                 </div>
             </div>
 
-            <label>圖片連結</label>
-            <div class="imageInputs"></div>
-            <button class="addImageBtn">新增圖片</button><br>
-            <label>上傳圖片</label>
-            <input type="file" id="fileInput" accept="image/*" />
-
-            <div class="images"></div>
+            <div class="content-begin-images">
+                <label>內容開頭配圖</label>
+                <div class="images"></div>
+                <label>上傳圖片</label>
+                <input type="file" id="fileInput" accept="image/*" />
+                <div class="imageInputs"></div>
+                <button class="addImageBtn">新增開頭配圖</button>
+            </div>
 
             <div class="date">日期：${new Date(Number(item.date)).toLocaleString()}</div>
-
-            <select class="recategory" style="margin-right: 10px;"></select>
-
-            <div class="content-preview">
-                <label>內容檢視</label>
-                <input type="checkbox" class="content-input-preview"/>
-            </div>
-            ${!isFromDB ? '' : `<iframe class="preview-page" src="https://notes.duckode.com/?user=${userName}&category=${category}&categoryID=${index}" width="100%" height="600px" style="border:none;"></iframe>`}
             
             <div id="tagInputContainer">
                 <input type="text" class="tagInput" placeholder="輸入標籤後按 Enter">
@@ -288,6 +297,12 @@ const main = (async () => {
             </div>
             <div id="suggestions"></div>
             <div id="tagList"></div>
+
+            <div class="content-preview">
+                <label>內容檢視</label>
+                <input type="checkbox" class="content-input-preview"/>
+            </div>
+            ${!isFromDB ? '' : `<iframe class="preview-page" src="https://notes.duckode.com/?user=${userName}&category=${category}&categoryID=${index}" width="100%" height="600px" style="border:none;"></iframe>`}
 
             <button class="delete">刪除文章</button>
         `;
@@ -469,7 +484,35 @@ const main = (async () => {
 
         container.appendChild(entry);
 
-        const contentEdit = entry.querySelector('.content-edit');
+        const contentTextarea = entry.querySelectorAll('textarea')[1];
+        const contentTools = entry.querySelector('.content-tools');
+        contentTextarea.addEventListener('blur', () => {
+            contentTools.style.display = '';
+
+            renderContentDisplay();
+            contentTextarea.style.display = '';
+        });
+        contentTools.childNodes.forEach(tool => {
+            tool.addEventListener('pointerdown', (e) => {
+                e.preventDefault();
+            });
+        });
+
+        const contentDisplay = entry.querySelector('.content-display');
+        renderContentDisplay();
+        function renderContentDisplay() {
+            contentDisplay.textContent = contentTextarea.value;
+            convertSyntaxToHTML(contentDisplay);
+            contentDisplay.style.display = '';
+        }
+        contentDisplay.addEventListener('pointerdown', (e) => {
+            contentDisplay.style.display = 'none';
+            contentTextarea.style.display = 'flex';
+            contentTools.style.display = 'flex';
+            setTimeout(() => {
+                contentTextarea.focus();
+            }, 0);
+        });
         function convertSyntaxToHTML(element) {
             element.innerHTML = convertToTable(element.innerHTML);
             element.innerHTML = convertToLinksNewTab(element.innerHTML);
@@ -481,6 +524,7 @@ const main = (async () => {
             element.innerHTML = convertToParagraphWithSize(element.innerHTML);
             element.innerHTML = convertToCodeBlocks(element.innerHTML);
             element.innerHTML = convertToIframes(element.innerHTML);
+            element.innerHTML = convertToListBlocks(element.innerHTML);
             element.innerHTML = element.innerHTML.replace(/\n/g, "<br>");
 
             function convertToTable(text) {
@@ -584,6 +628,46 @@ const main = (async () => {
                     return [width, height].filter(Boolean).join(' ');
                 }
             }
+            function convertToListBlocks(text) {
+                function parseBlock(text) {
+                    let i = 0;
+                    const stack = [];
+                    let output = '';
+
+                    while (i < text.length) {
+                        if (text.startsWith('[ul[[', i) || text.startsWith('[ol[[', i)) {
+                            const type = text.startsWith('[ul[[', i) ? 'ul' : 'ol';
+                            stack.push(type);
+                            output += `<${type}>`;
+                            i += 5;
+                        } else if (text.startsWith('[li', i)) {
+                            const liMatch = text.slice(i).match(/^\[li(?::([a-zA-Z\-]+))?\[\[/);
+                            if (liMatch) {
+                                const style = liMatch[1];
+                                const styleAttr = style ? ` style="list-style-type:${style};"` : '';
+                                stack.push('li');
+                                output += `<li${styleAttr}>`;
+                                i += liMatch[0].length;
+                            } else {
+                                i++;
+                            }
+                        } else if (text.startsWith(']]]', i)) {
+                            const last = stack.pop();
+                            output += `</${last}>`;
+                            i += 3;
+                        } else {
+                            output += text[i];
+                            i++;
+                        }
+                    }
+
+                    return output;
+                }
+
+                return parseBlock(text.trim());
+            }
+
+
         }
 
         const entryTextareas = entry.querySelectorAll("textarea");
@@ -746,10 +830,11 @@ const main = (async () => {
             if (lastFocusedInput) {
                 insertSyntaxFlexible(
                     lastFocusedInput,
-                    '|表格一|表格二|\n|內容一|內容二',
+                    '|表格一|表格二|\n|內容一|內容二|',
                     '表格一',
                     '表格一'
                 );
+                contentTextarea.style.height = "auto";
             }
         };
 
@@ -763,6 +848,72 @@ const main = (async () => {
                     '文字',
                     '文字'
                 );
+            }
+        };
+
+        const discListSpace = entry.querySelector('.disc-list-space');
+        discListSpace.onclick = (e) => {
+            e.preventDefault();
+            if (lastFocusedInput) {
+                insertSyntaxFlexible(
+                    lastFocusedInput,
+                    '[ul[[\n\u0020\u0020[li[[清單1]]]\n]]]',
+                    '清單1',
+                    '清單1'
+                );
+                contentTextarea.style.height = "auto";
+            }
+        };
+        const decimalListSpace = entry.querySelector('.decimal-list-space');
+        decimalListSpace.onclick = (e) => {
+            e.preventDefault();
+            if (lastFocusedInput) {
+                insertSyntaxFlexible(
+                    lastFocusedInput,
+                    '[ul[[\n\u0020\u0020[li:decimal[[清單1]]]\n]]]',
+                    '清單1',
+                    '清單1'
+                );
+                contentTextarea.style.height = "auto";
+            }
+        };
+        const squareListSpace = entry.querySelector('.square-list-space');
+        squareListSpace.onclick = (e) => {
+            e.preventDefault();
+            if (lastFocusedInput) {
+                insertSyntaxFlexible(
+                    lastFocusedInput,
+                    '[ul[[\n\u0020\u0020[li:square[[清單1]]]\n]]]',
+                    '清單1',
+                    '清單1'
+                );
+                contentTextarea.style.height = "auto";
+            }
+        };
+        const circleListSpace = entry.querySelector('.circle-list-space');
+        circleListSpace.onclick = (e) => {
+            e.preventDefault();
+            if (lastFocusedInput) {
+                insertSyntaxFlexible(
+                    lastFocusedInput,
+                    '[ul[[\n\u0020\u0020[li:circle[[清單1]]]\n]]]',
+                    '清單1',
+                    '清單1'
+                );
+                contentTextarea.style.height = "auto";
+            }
+        };
+        const noneListSpace = entry.querySelector('.none-list-space');
+        noneListSpace.onclick = (e) => {
+            e.preventDefault();
+            if (lastFocusedInput) {
+                insertSyntaxFlexible(
+                    lastFocusedInput,
+                    '[ul[[\n\u0020\u0020[li:none[[清單1]]]\n]]]',
+                    '清單1',
+                    '清單1'
+                );
+                contentTextarea.style.height = "auto";
             }
         };
         function insertSyntaxFlexible(inputElement, syntaxTemplate, replaceTarget, selectTarget) {
@@ -881,9 +1032,11 @@ const main = (async () => {
         tagInput.addEventListener('blur', async () => {
             await timer.delay(200); // 保留點擊建議的時間
             suggestionsBox.innerHTML = '';
+            suggestionsBox.style.display = '';
         });
 
         function showSuggestions() {
+            suggestionsBox.style.display = 'block';
             const input = tagInput.value.trim().toLowerCase();
             suggestionsBox.innerHTML = '';
 
