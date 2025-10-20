@@ -181,7 +181,7 @@ img {
 
 .content-tools {
     position: sticky;
-    bottom: 0px;
+    top: 0px;
     display: none;
     justify-content: flex-end;
     flex-wrap: wrap;

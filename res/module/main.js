@@ -208,8 +208,6 @@ const main = (async () => {
 
             <label>內容</label>
             <div>
-                <div class="content-display" contenteditable="true"></div>
-                <textarea class="content-edit" rows="4">${item.content}</textarea><br>
                 <div class="content-tools">
                     <button class="disc-list-space">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 32 32"><path fill="none" stroke="#ffffff" stroke-linecap="round" stroke-width="2" d="M12 8h15m-15 8h9m-9 8h15M7 24a1 1 0 1 1-2 0a1 1 0 0 1 2 0Zm0-8a1 1 0 1 1-2 0a1 1 0 0 1 2 0Zm0-8a1 1 0 1 1-2 0a1 1 0 0 1 2 0Z"></path></svg>
@@ -278,6 +276,8 @@ const main = (async () => {
                         </svg>
                     </button>
                 </div>
+                <div class="content-display" contenteditable="true"></div>
+                <textarea class="content-edit" rows="4">${item.content}</textarea><br>
             </div>
 
             <div class="content-begin-images">
@@ -524,8 +524,12 @@ const main = (async () => {
             element.innerHTML = convertToParagraphWithSize(element.innerHTML);
             element.innerHTML = convertToCodeBlocks(element.innerHTML);
             element.innerHTML = convertToIframes(element.innerHTML);
-            element.innerHTML = convertToListBlocks(element.innerHTML);
             element.innerHTML = element.innerHTML.replace(/\n/g, "<br>");
+            element.innerHTML = convertToListBlocks(element.innerHTML);
+            entry.querySelectorAll('ul').forEach(ul => {
+                ul.querySelectorAll('br').forEach(br => br.remove());
+            });
+
 
             function convertToTable(text) {
                 return text.replace(
@@ -916,6 +920,51 @@ const main = (async () => {
                 contentTextarea.style.height = "auto";
             }
         };
+        contentTextarea.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                const textarea = e.target;
+                const cursorPos = textarea.selectionStart;
+                const text = textarea.value;
+
+                const beforeCursor = text.slice(0, cursorPos);
+
+                const liMatch = beforeCursor.match(/\[li:([^\[\]]+)\[\[.*?\]\]\]\s*$/);
+
+                const ljMatch = beforeCursor.match(/\[li\[\[.*?\]\]\]\s*$/);
+
+                if (liMatch || ljMatch) {
+                    e.preventDefault();
+
+                    let insertText = '';
+                    if (liMatch) {
+                        const tag = liMatch[1];
+                        insertText = `\n  [li:${tag}[[文字]]]`;
+                    } else if (ljMatch) {
+                        insertText = `\n  [li[[文字]]]`;
+                    }
+                    insertSyntaxFlexible(
+                        lastFocusedInput,
+                        insertText,
+                        '文字',
+                        '文字'
+                    );
+                    contentTextarea.style.height = "auto";
+                }
+            }
+            if (e.key === 'Tab') {
+                e.preventDefault();
+                const textarea = e.target;
+                const start = textarea.selectionStart;
+                const end = textarea.selectionEnd;
+
+                const spaces = '  ';
+                textarea.value = textarea.value.substring(0, start) + spaces + textarea.value.substring(end);
+
+                textarea.selectionStart = textarea.selectionEnd = start + spaces.length;
+            }
+
+
+        });
         function insertSyntaxFlexible(inputElement, syntaxTemplate, replaceTarget, selectTarget) {
             const start = inputElement.selectionStart;
             const end = inputElement.selectionEnd;
