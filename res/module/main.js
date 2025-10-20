@@ -528,6 +528,12 @@ const main = (async () => {
             element.innerHTML = convertToListBlocks(element.innerHTML);
             entry.querySelectorAll('ul').forEach(ul => {
                 ul.querySelectorAll('br').forEach(br => br.remove());
+                if (ul.previousSibling && ul.previousSibling.nodeName === 'BR') {
+                    ul.previousSibling.remove();
+                }
+                if (ul.nextSibling && ul.nextSibling.nodeName === 'BR') {
+                    ul.nextSibling.remove();
+                }
             });
 
 
