@@ -626,10 +626,10 @@ const main = (async () => {
             function convertToCodeBlocks(text) {
                 return text
                     .replace(/\[code:([^\[\]]+)\[\[([\s\S]*?)\]\]\]/g, (match, language, content) => {
-                        return `<pre><code class="${language}">${content.trimStart()}</code></pre>`;
+                        return `<pre><code class="${language}">${content.trimStart().trimEnd()}</code></pre>`;
                     })
                     .replace(/\[code\[\[([\s\S]*?)\]\]\]/g, (match, content) => {
-                        return `<pre><code>${content.trimStart()}</code></pre>`;
+                        return `<pre><code>${content.trimStart().trimEnd()}</code></pre>`;
                     });
             }
             function convertToIframes(text) {
@@ -713,6 +713,7 @@ const main = (async () => {
             }
         };
 
+        //#region 插入功能
         const entryCodeSpace = entry.querySelector('.code-space');
         let lastFocusedInput = null;
         document.addEventListener('focusin', (e) => {
@@ -734,7 +735,7 @@ const main = (async () => {
             if (lastFocusedInput) {
                 insertSyntaxFlexible(
                     lastFocusedInput,
-                    '[code:language-csharp[[請放入代碼]]]',
+                    '[code:language-csharp[[\n請放入代碼\n]]]',
                     '請放入代碼',
                     '請放入代碼'
                 );
@@ -1006,6 +1007,7 @@ const main = (async () => {
 
             inputElement.setSelectionRange(keywordStart, keywordEnd);
         }
+        //#endregion
 
         const imageInputsDiv = entry.querySelector('.imageInputs');
         const imagePreviewDiv = entry.querySelector('.images');
