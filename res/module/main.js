@@ -899,7 +899,7 @@ const main = (async () => {
             if (lastFocusedInput) {
                 insertSyntaxFlexible(
                     lastFocusedInput,
-                    '[ul[[\n\u0020\u0020[li[[清單1]]]\n]]]',
+                    '[ul[[\n\u0020\u0020\u0020\u0020[li[[清單1]]]\n]]]',
                     '清單1',
                     '清單1',
                     '清單1'
@@ -913,7 +913,7 @@ const main = (async () => {
             if (lastFocusedInput) {
                 insertSyntaxFlexible(
                     lastFocusedInput,
-                    '[ul[[\n\u0020\u0020[li:decimal[[清單1]]]\n]]]',
+                    '[ul[[\n\u0020\u0020\u0020\u0020[li:decimal[[清單1]]]\n]]]',
                     '清單1',
                     'decimal',
                     '清單1'
@@ -927,7 +927,7 @@ const main = (async () => {
             if (lastFocusedInput) {
                 insertSyntaxFlexible(
                     lastFocusedInput,
-                    '[ul[[\n\u0020\u0020[li:square[[清單1]]]\n]]]',
+                    '[ul[[\n\u0020\u0020\u0020\u0020[li:square[[清單1]]]\n]]]',
                     '清單1',
                     'square',
                     '清單1'
@@ -941,7 +941,7 @@ const main = (async () => {
             if (lastFocusedInput) {
                 insertSyntaxFlexible(
                     lastFocusedInput,
-                    '[ul[[\n\u0020\u0020[li:circle[[清單1]]]\n]]]',
+                    '[ul[[\n\u0020\u0020\u0020\u0020[li:circle[[清單1]]]\n]]]',
                     '清單1',
                     'circle',
                     '清單1'
@@ -955,7 +955,7 @@ const main = (async () => {
             if (lastFocusedInput) {
                 insertSyntaxFlexible(
                     lastFocusedInput,
-                    '[ul[[\n\u0020\u0020[li:none[[清單1]]]\n]]]',
+                    '[ul[[\n\u0020\u0020\u0020\u0020[li:none[[清單1]]]\n]]]',
                     '清單1',
                     'none',
                     '清單1'
@@ -981,7 +981,7 @@ const main = (async () => {
                     let insertText = '';
                     if (liMatch) {
                         const tag = liMatch[1];
-                        insertText = `\n  [li:${tag}[[文字]]]`;
+                        insertText = `\n    [li:${tag}[[文字]]]`;
                         insertSyntaxFlexible(
                             lastFocusedInput,
                             insertText,
@@ -990,7 +990,7 @@ const main = (async () => {
                             '文字'
                         );
                     } else if (ljMatch) {
-                        insertText = `\n  [li[[文字]]]`;
+                        insertText = `\n    [li[[文字]]]`;
                         insertSyntaxFlexible(
                             lastFocusedInput,
                             insertText,
@@ -1008,38 +1008,90 @@ const main = (async () => {
                 const value = textarea.value;
                 const start = textarea.selectionStart;
                 const end = textarea.selectionEnd;
-                const spaces = '    ';
+                const spaces = '    '; // 4 個空格
 
-                // 找出選取範圍涵蓋的完整行
-                const lineStart = value.lastIndexOf('\n', start - 1) + 1;
-                const lineEnd = value.indexOf('\n', end);
-                const selectionEnd = lineEnd === -1 ? value.length : lineEnd;
-                const selectedText = value.substring(lineStart, selectionEnd);
-                const lines = selectedText.split('\n');
+                if (start === end) {
+                    // 沒有選取文字
+                    const lineStart = value.lastIndexOf('\n', start - 1) + 1;
+                    const cursorInLine = start - lineStart;
 
-                let modifiedLines;
-                if (e.shiftKey) {
-                    // Shift + Tab：移除每行前面的空格（如果有）
-                    modifiedLines = lines.map(line =>
-                        line.startsWith(spaces) ? line.slice(spaces.length) : line
-                    );
+                    if (e.shiftKey) {
+                        // Shift + Tab：如果在行首，嘗試移除空格
+                        const lineEnd = value.indexOf('\n', start);
+                        const lineEndPos = lineEnd === -1 ? value.length : lineEnd;
+                        const lineText = value.substring(lineStart, lineEndPos);
+                        const match = lineText.match(/^ {1,4}/);
+                        const removed = match ? match[0].length : 0;
+
+                        if (removed > 0) {
+                            const newLineText = lineText.replace(/^ {1,4}/, '');
+                            const newText =
+                                value.substring(0, lineStart) +
+                                newLineText +
+                                value.substring(lineEndPos);
+                            textarea.value = newText;
+                            textarea.selectionStart = textarea.selectionEnd = start - removed;
+                        }
+                    } else {
+                        // Tab：如果光標在行首，縮排整行；否則插入空格
+                        if (cursorInLine === 0) {
+                            const lineEnd = value.indexOf('\n', start);
+                            const lineEndPos = lineEnd === -1 ? value.length : lineEnd;
+                            const lineText = value.substring(lineStart, lineEndPos);
+                            const newLineText = spaces + lineText;
+                            const newText =
+                                value.substring(0, lineStart) +
+                                newLineText +
+                                value.substring(lineEndPos);
+                            textarea.value = newText;
+                            textarea.selectionStart = textarea.selectionEnd = start + spaces.length;
+                        } else {
+                            // 插入空格
+                            const newText =
+                                value.substring(0, start) +
+                                spaces +
+                                value.substring(end);
+                            textarea.value = newText;
+                            textarea.selectionStart = textarea.selectionEnd = start + spaces.length;
+                        }
+                    }
                 } else {
-                    // Tab：每行前面加上空格
-                    modifiedLines = lines.map(line => spaces + line);
+                    // 有選取文字：照原本邏輯處理多行縮排
+                    const lineStart = value.lastIndexOf('\n', start - 1) + 1;
+                    const lineEnd = value.indexOf('\n', end);
+                    const selectionEnd = lineEnd === -1 ? value.length : lineEnd;
+                    const selectedText = value.substring(lineStart, selectionEnd);
+                    const lines = selectedText.split('\n');
+
+                    let modifiedLines = [];
+                    let lineDeltas = [];
+                    let totalDelta = 0;
+
+                    if (e.shiftKey) {
+                        modifiedLines = lines.map(line => {
+                            const match = line.match(/^ {1,4}/);
+                            const removed = match ? match[0].length : 0;
+                            lineDeltas.push(-removed);
+                            totalDelta -= removed;
+                            return line.replace(/^ {1,4}/, '');
+                        });
+                    } else {
+                        modifiedLines = lines.map(line => {
+                            lineDeltas.push(spaces.length);
+                            totalDelta += spaces.length;
+                            return spaces + line;
+                        });
+                    }
+
+                    const newText =
+                        value.substring(0, lineStart) +
+                        modifiedLines.join('\n') +
+                        value.substring(selectionEnd);
+
+                    textarea.value = newText;
+                    textarea.selectionStart = start + lineDeltas[0];
+                    textarea.selectionEnd = end + totalDelta;
                 }
-
-                const newText =
-                    value.substring(0, lineStart) +
-                    modifiedLines.join('\n') +
-                    value.substring(selectionEnd);
-
-                // 更新 textarea
-                textarea.value = newText;
-
-                // 計算新的選取範圍
-                const delta = e.shiftKey ? -spaces.length : spaces.length;
-                textarea.selectionStart = start + delta;
-                textarea.selectionEnd = end + delta * lines.length;
             }
         });
         function insertSyntaxFlexible(inputElement, syntaxTemplate, replaceTarget, selectTargetIfReplaced, selectTargetIfDefault) {
