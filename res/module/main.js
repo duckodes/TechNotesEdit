@@ -526,6 +526,11 @@ const main = (async () => {
             element.innerHTML = convertToIframes(element.innerHTML);
             element.innerHTML = element.innerHTML.replace(/\n/g, "<br>");
             element.innerHTML = convertToListBlocks(element.innerHTML);
+            entry.querySelectorAll('P').forEach(p => {
+                if (p.nextSibling && p.nextSibling.nodeName === 'BR') {
+                    p.nextSibling.remove();
+                }
+            });
             entry.querySelectorAll('ul').forEach(ul => {
                 ul.querySelectorAll('br').forEach(br => br.remove());
                 if (ul.previousSibling && ul.previousSibling.nodeName === 'BR') {
