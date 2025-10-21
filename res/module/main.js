@@ -742,8 +742,10 @@ const main = (async () => {
                     lastFocusedInput,
                     '[code:language-csharp[[\n請放入代碼\n]]]',
                     '請放入代碼',
+                    'csharp',
                     '請放入代碼'
                 );
+                contentTextarea.style.height = "auto";
             }
 
         };
@@ -756,8 +758,10 @@ const main = (async () => {
                     lastFocusedInput,
                     '[+a:連結[[名稱]]]',
                     '名稱',
+                    '連結',
                     '連結'
                 );
+                contentTextarea.style.height = "auto";
             }
         };
 
@@ -769,8 +773,10 @@ const main = (async () => {
                     lastFocusedInput,
                     '[p:12[[引用文字]]]',
                     '引用文字',
+                    '12',
                     '引用文字'
                 );
+                contentTextarea.style.height = "auto";
             }
         };
 
@@ -782,8 +788,10 @@ const main = (async () => {
                     lastFocusedInput,
                     '[span:12[[文字]]]',
                     '文字',
+                    '12',
                     '文字'
                 );
+                contentTextarea.style.height = "auto";
             }
         };
 
@@ -795,8 +803,10 @@ const main = (async () => {
                     lastFocusedInput,
                     '(iframe:width="100%"[[連結]])',
                     '連結',
+                    '100%',
                     '連結'
                 );
+                contentTextarea.style.height = "auto";
             }
         };
 
@@ -808,8 +818,10 @@ const main = (async () => {
                     lastFocusedInput,
                     '[img:連結[[]]]',
                     '連結',
+                    '連結',
                     '連結'
                 );
+                contentTextarea.style.height = "auto";
             }
         };
 
@@ -844,8 +856,10 @@ const main = (async () => {
                     lastFocusedInput,
                     `[h${num}[[文字]]]`,
                     '文字',
+                    `${num}`,
                     '文字'
                 );
+                contentTextarea.style.height = "auto";
             }
         }
 
@@ -857,6 +871,7 @@ const main = (async () => {
                     lastFocusedInput,
                     '|表格一|表格二|\n|內容一|內容二|',
                     '表格一',
+                    '表格二',
                     '表格一'
                 );
                 contentTextarea.style.height = "auto";
@@ -871,8 +886,10 @@ const main = (async () => {
                     lastFocusedInput,
                     '[strong:12[[文字]]]',
                     '文字',
+                    '12',
                     '文字'
                 );
+                contentTextarea.style.height = "auto";
             }
         };
 
@@ -883,6 +900,7 @@ const main = (async () => {
                 insertSyntaxFlexible(
                     lastFocusedInput,
                     '[ul[[\n\u0020\u0020[li[[清單1]]]\n]]]',
+                    '清單1',
                     '清單1',
                     '清單1'
                 );
@@ -897,6 +915,7 @@ const main = (async () => {
                     lastFocusedInput,
                     '[ul[[\n\u0020\u0020[li:decimal[[清單1]]]\n]]]',
                     '清單1',
+                    'decimal',
                     '清單1'
                 );
                 contentTextarea.style.height = "auto";
@@ -910,6 +929,7 @@ const main = (async () => {
                     lastFocusedInput,
                     '[ul[[\n\u0020\u0020[li:square[[清單1]]]\n]]]',
                     '清單1',
+                    'square',
                     '清單1'
                 );
                 contentTextarea.style.height = "auto";
@@ -923,6 +943,7 @@ const main = (async () => {
                     lastFocusedInput,
                     '[ul[[\n\u0020\u0020[li:circle[[清單1]]]\n]]]',
                     '清單1',
+                    'circle',
                     '清單1'
                 );
                 contentTextarea.style.height = "auto";
@@ -936,6 +957,7 @@ const main = (async () => {
                     lastFocusedInput,
                     '[ul[[\n\u0020\u0020[li:none[[清單1]]]\n]]]',
                     '清單1',
+                    'none',
                     '清單1'
                 );
                 contentTextarea.style.height = "auto";
@@ -960,15 +982,23 @@ const main = (async () => {
                     if (liMatch) {
                         const tag = liMatch[1];
                         insertText = `\n  [li:${tag}[[文字]]]`;
+                        insertSyntaxFlexible(
+                            lastFocusedInput,
+                            insertText,
+                            '文字',
+                            `${tag}`,
+                            '文字'
+                        );
                     } else if (ljMatch) {
                         insertText = `\n  [li[[文字]]]`;
+                        insertSyntaxFlexible(
+                            lastFocusedInput,
+                            insertText,
+                            '文字',
+                            '文字',
+                            '文字'
+                        );
                     }
-                    insertSyntaxFlexible(
-                        lastFocusedInput,
-                        insertText,
-                        '文字',
-                        '文字'
-                    );
                     contentTextarea.style.height = "auto";
                 }
             }
@@ -986,13 +1016,14 @@ const main = (async () => {
 
 
         });
-        function insertSyntaxFlexible(inputElement, syntaxTemplate, replaceTarget, selectTarget) {
+        function insertSyntaxFlexible(inputElement, syntaxTemplate, replaceTarget, selectTargetIfReplaced, selectTargetIfDefault) {
             const start = inputElement.selectionStart;
             const end = inputElement.selectionEnd;
             const originalText = inputElement.value;
             const selectedText = originalText.slice(start, end);
 
-            const replacedText = selectedText || replaceTarget;
+            const hasSelection = selectedText.length > 0;
+            const replacedText = hasSelection ? selectedText : replaceTarget;
             const filledSyntax = syntaxTemplate.replace(replaceTarget, replacedText);
 
             inputElement.value =
@@ -1005,7 +1036,9 @@ const main = (async () => {
             const insertedStart = start;
             const insertedEnd = start + filledSyntax.length;
 
-            // 重新計算 selectTarget 在 filledSyntax 中的位置
+            // 根據是否有選取，決定要選哪個 target
+            const selectTarget = hasSelection ? selectTargetIfReplaced : selectTargetIfDefault;
+
             const selectIndexInFilled = filledSyntax.indexOf(selectTarget);
             const keywordStart = insertedStart + selectIndexInFilled;
             const keywordEnd = keywordStart + selectTarget.length;
