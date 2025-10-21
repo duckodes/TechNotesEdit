@@ -1005,16 +1005,42 @@ const main = (async () => {
             if (e.key === 'Tab') {
                 e.preventDefault();
                 const textarea = e.target;
+                const value = textarea.value;
                 const start = textarea.selectionStart;
                 const end = textarea.selectionEnd;
+                const spaces = '    ';
 
-                const spaces = '  ';
-                textarea.value = textarea.value.substring(0, start) + spaces + textarea.value.substring(end);
+                // 找出選取範圍涵蓋的完整行
+                const lineStart = value.lastIndexOf('\n', start - 1) + 1;
+                const lineEnd = value.indexOf('\n', end);
+                const selectionEnd = lineEnd === -1 ? value.length : lineEnd;
+                const selectedText = value.substring(lineStart, selectionEnd);
+                const lines = selectedText.split('\n');
 
-                textarea.selectionStart = textarea.selectionEnd = start + spaces.length;
+                let modifiedLines;
+                if (e.shiftKey) {
+                    // Shift + Tab：移除每行前面的空格（如果有）
+                    modifiedLines = lines.map(line =>
+                        line.startsWith(spaces) ? line.slice(spaces.length) : line
+                    );
+                } else {
+                    // Tab：每行前面加上空格
+                    modifiedLines = lines.map(line => spaces + line);
+                }
+
+                const newText =
+                    value.substring(0, lineStart) +
+                    modifiedLines.join('\n') +
+                    value.substring(selectionEnd);
+
+                // 更新 textarea
+                textarea.value = newText;
+
+                // 計算新的選取範圍
+                const delta = e.shiftKey ? -spaces.length : spaces.length;
+                textarea.selectionStart = start + delta;
+                textarea.selectionEnd = end + delta * lines.length;
             }
-
-
         });
         function insertSyntaxFlexible(inputElement, syntaxTemplate, replaceTarget, selectTargetIfReplaced, selectTargetIfDefault) {
             const start = inputElement.selectionStart;
