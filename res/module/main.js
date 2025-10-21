@@ -1396,6 +1396,37 @@ const main = (async () => {
 
     //#region 更換個人資訊
     async function renderChangeProfile() {
+        async function isTokenValid() {
+            if (!auth.currentUser) return false;
+
+            try {
+                const tokenResult = await auth.currentUser.getIdTokenResult();
+                const now = Date.now();
+                const exp = Date.parse(tokenResult.expirationTime);
+                return exp < now;
+            } catch (e) {
+                await relogin();
+                console.error("Token 判斷失敗", e);
+                return false;
+            }
+        }
+        async function relogin() {
+            alert("登入已過期，請重新登入");
+            const email = prompt("請輸入帳號或信箱");
+            const password = prompt("請輸入密碼");
+            if (!email || !password) {
+                alert("帳號或密碼未輸入完整");
+                return;
+            }
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+                alert("登入成功！");
+            } catch (error) {
+                alert("登入失敗：" + error.message);
+                return;
+            }
+        }
+
         const dataTopic = (await get(ref(database, `technotes/user/${auth.currentUser.uid}/topic`))).val();
         const dataImage = (await get(ref(database, `technotes/user/${auth.currentUser.uid}/image`))).val();
         const dataName = (await get(ref(database, `technotes/user/${auth.currentUser.uid}/name`))).val();
@@ -1422,6 +1453,7 @@ const main = (async () => {
         buttonTopic.textContent = '更新主旨';
         container.appendChild(buttonTopic);
         buttonTopic.onclick = async () => {
+            await isTokenValid();
             if (!confirm(`確定要更新主旨?${inputTopic.value}`)) return;
             try {
                 await set(ref(database, `technotes/user/${auth.currentUser.uid}/topic`), inputTopic.value);
@@ -1459,6 +1491,7 @@ const main = (async () => {
         buttonImage.textContent = '更新頭貼';
         containerImage.appendChild(buttonImage);
         buttonImage.onclick = async () => {
+            await isTokenValid();
             if (!confirm('確定要更新頭貼?')) return;
             try {
                 await set(ref(database, `technotes/user/${auth.currentUser.uid}/image`), avatarImage.src);
@@ -1495,6 +1528,7 @@ const main = (async () => {
             buttonTheme.textContent = '更新主題';
             container.appendChild(buttonTheme);
             buttonTheme.onclick = async () => {
+                await isTokenValid();
                 if (!confirm('確定要更新主體?')) return;
                 try {
                     await set(ref(database, `technotes/user/${auth.currentUser.uid}/theme`), selectTheme.value);
@@ -1524,6 +1558,7 @@ const main = (async () => {
         buttonTitle.textContent = '更新職稱';
         container.appendChild(buttonTitle);
         buttonTitle.onclick = async () => {
+            await isTokenValid();
             if (!confirm('確定要更新職稱?')) return;
             try {
                 const titleRef = ref(database, `technotes/user/${auth.currentUser.uid}/title`);
@@ -1545,6 +1580,7 @@ const main = (async () => {
         buttonEmployed.textContent = '更新職位資訊';
         container.appendChild(buttonEmployed);
         buttonEmployed.onclick = async () => {
+            await isTokenValid();
             if (!confirm('確定要更新職位資訊?')) return;
             try {
                 const employedRef = ref(database, `technotes/user/${auth.currentUser.uid}/employed`);
@@ -1566,6 +1602,7 @@ const main = (async () => {
         buttonEmail.textContent = '更新信箱';
         container.appendChild(buttonEmail);
         buttonEmail.onclick = async () => {
+            await isTokenValid();
             if (!confirm('確定要更新信箱?')) return;
             try {
                 const emailRef = ref(database, `technotes/user/${auth.currentUser.uid}/email`);
@@ -1587,6 +1624,7 @@ const main = (async () => {
         buttonGithub.textContent = '更新 Github 連結';
         container.appendChild(buttonGithub);
         buttonGithub.onclick = async () => {
+            await isTokenValid();
             if (!confirm('確定要更新Github連結?')) return;
             try {
                 const githubRef = ref(database, `technotes/user/${auth.currentUser.uid}/github`);
@@ -1604,6 +1642,7 @@ const main = (async () => {
         dbEditor.parentNode.insertBefore(container, dbEditor);
 
         buttonName.addEventListener('click', async () => {
+            await isTokenValid();
             const newName = inputName.value;
             const user = auth.currentUser;
 
