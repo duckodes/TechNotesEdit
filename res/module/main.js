@@ -475,7 +475,7 @@ const main = (async () => {
 
                         const fileToInsert =
                             `    <url>
-        <loc>https://notes.duckodes.com/${userId}.xml</loc>
+        <loc>https://notes.duckode.com/submodule/TechNotesSitemap/${userId}.xml</loc>
         <lastmod>${today}</lastmod>
     </url>`;
                         await pushSitemapToGitHub(fileToInsert);
