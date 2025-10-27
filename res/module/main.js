@@ -468,6 +468,24 @@ const main = (async () => {
                             console.log(`已更新 ${category} ${index}：`, data[category][index]);
                         }
                         await setTags(tags);
+
+                        // update main sitemap
+                        const userId = auth.currentUser.uid;
+                        const today = new Date().toISOString().split('T')[0]; // yyyy-mm-dd
+
+                        const fileToInsert =
+                            `    <url>
+        <loc>https://notes.duckodes.com/${userId}.xml</loc>
+        <lastmod>${today}</lastmod>
+    </url>`;
+                        await pushSitemapToGitHub(fileToInsert);
+                        const dataName = (await get(ref(database, `technotes/user/${auth.currentUser.uid}/name`))).val();
+                        await pushSitemapToGitHub(
+                            `    <url>
+        <loc>https://notes.duckode.com/?user=${dataName}&amp;category=${category}&amp;categoryID=${index}</loc>
+        <lastmod>${today}</lastmod>
+    </url>`, `${userId}.xml`);
+
                         dbEditor.innerHTML = '';
                         manualEditor.innerHTML = '';
                         await updateData();
@@ -712,6 +730,9 @@ const main = (async () => {
                 dbEditor.innerHTML = '';
                 manualEditor.innerHTML = '';
                 await deleteNote(category, index);
+
+                const dataName = (await get(ref(database, `technotes/user/${auth.currentUser.uid}/name`))).val();
+                await deleteUserFromSitemap(`https://notes.duckode.com/?user=${dataName}&amp;category=${category}&amp;categoryID=${index}`, `${auth.currentUser.uid}.xml`);
                 await updateData();
                 renderDBEditor();
                 renderManualEditor();
@@ -1801,6 +1822,11 @@ const main = (async () => {
     }
     //#endregion
 
+
+
+
+
+
     //#region API圖片上傳功能
     async function uploadImages(file) {
         if (!file) return alert('請選擇照片');
@@ -1903,4 +1929,187 @@ const main = (async () => {
     }
     //#endregion
 
+
+
+
+
+
+    //#region API更新Sitemap
+    async function pushSitemapToGitHub(fileToInsert, path = 'sitemap.xml') {
+        const apiUrl = `https://api.github.com/repos/duckodes/TechNotesSitemap/contents/${path}`;
+
+        const tokenSnapshot = await get(ref(database, `github/${auth.currentUser.uid}/token`));
+        const token = tokenSnapshot.val();
+
+        let sha = null;
+        let existingContent = '';
+
+        try {
+            const res = await fetch(apiUrl, {
+                headers: {
+                    Authorization: `token ${token}`,
+                    Accept: 'application/vnd.github.v3+json'
+                }
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                sha = data.sha;
+                function decodeBase64Utf8(base64) {
+                    const binary = atob(base64);
+                    const bytes = new Uint8Array([...binary].map(c => c.charCodeAt(0)));
+                    return new TextDecoder().decode(bytes);
+                }
+                existingContent = decodeBase64Utf8(data.content);
+            }
+        } catch (err) {
+            console.warn('sitemap.xml 不存在，將建立新檔案');
+        }
+
+        // 建立或更新 sitemap.xml 內容
+        function extractLocFromXml(xml) {
+            const locMatch = xml.match(/<loc>(.*?)<\/loc>/);
+            return locMatch ? locMatch[1] : null;
+        }
+
+        function insertUserUrl(existingContent, fileToInsert) {
+            const newLoc = extractLocFromXml(fileToInsert);
+
+            // 如果 sitemap 不存在，或不是有效的 <urlset> 結構 → 建立新的
+            if (!existingContent || !existingContent.includes('<urlset')) {
+                console.log('sitemap 不存在，建立新的');
+                const newContent = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${fileToInsert}\n</urlset>`;
+                return { updatedContent: newContent, didUpdate: true };
+            }
+
+            // 如果已經有該 user 的 <loc> → 不插入
+            if (newLoc && existingContent.includes(newLoc)) {
+                console.log(`已存在，不需要更新：${newLoc}`);
+                return { updatedContent: null, didUpdate: false };
+            }
+
+            // 插入新的 <url> 區塊
+            const newContent = existingContent.replace('</urlset>', `${fileToInsert}\n</urlset>`);
+            console.log(`插入新的 user URL：${newLoc}`);
+            return { updatedContent: newContent, didUpdate: true };
+        }
+
+        const { updatedContent, didUpdate } = insertUserUrl(existingContent, fileToInsert);
+
+        if (!didUpdate || !updatedContent) {
+            console.log('sitemap.xml 沒有變動，不需要 push');
+            return;
+        }
+
+        // 編碼為 base64（使用 TextEncoder）
+        function encodeBase64Utf8(str) {
+            const utf8Bytes = new TextEncoder().encode(str);
+            const base64String = btoa(String.fromCharCode(...utf8Bytes));
+            return base64String;
+        }
+        const encodedContent = encodeBase64Utf8(updatedContent);
+
+        // 建立 payload 並 push 到 GitHub
+        const payload = {
+            message: 'update sitemap.xml',
+            content: encodedContent,
+            branch: 'main',
+            ...(sha && { sha })
+        };
+
+        const response = await fetch(apiUrl, {
+            method: 'PUT',
+            headers: {
+                Authorization: `token ${token}`,
+                Accept: 'application/vnd.github.v3+json'
+            },
+            body: JSON.stringify(payload)
+        });
+
+        const result = await response.json();
+        if (response.ok) {
+            console.log('sitemap.xml updated:', result.content.html_url);
+        } else {
+            console.error('Failed to update sitemap.xml:', result);
+        }
+    }
+    async function deleteUserFromSitemap(locToDelete, path = 'sitemap.xml') {
+        const apiUrl = `https://api.github.com/repos/duckodes/TechNotesSitemap/contents/${path}`;
+
+        const tokenSnapshot = await get(ref(database, `github/${auth.currentUser.uid}/token`));
+        const token = tokenSnapshot.val();
+
+        let sha = null;
+        let existingContent = '';
+
+        try {
+            const res = await fetch(apiUrl, {
+                headers: {
+                    Authorization: `token ${token}`,
+                    Accept: 'application/vnd.github.v3+json'
+                }
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                sha = data.sha;
+                function decodeBase64Utf8(base64) {
+                    const binary = atob(base64);
+                    const bytes = new Uint8Array([...binary].map(c => c.charCodeAt(0)));
+                    return new TextDecoder().decode(bytes);
+                }
+                existingContent = decodeBase64Utf8(data.content);
+            } else {
+                console.warn('sitemap.xml 不存在，無法刪除');
+                return;
+            }
+        } catch (err) {
+            console.error('無法讀取 sitemap.xml:', err);
+            return;
+        }
+
+        // 用正則找出包含該 <loc> 的整個 <url> 區塊
+        const urlRegex = new RegExp(`<url>\\s*<loc>${locToDelete.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}</loc>[\\s\\S]*?<\\/url>`, 'g');
+        const updatedContent = existingContent
+            .replace(urlRegex, '')
+            .replace(/^\s*[\r\n]/gm, '') // 移除空行
+            .trim();
+
+        if (updatedContent === existingContent) {
+            console.log(`sitemap.xml 中沒有找到 <loc>${locToDelete}</loc>，無需更新`);
+            return;
+        }
+
+        // 編碼為 base64
+        function encodeBase64Utf8(str) {
+            const utf8Bytes = new TextEncoder().encode(str);
+            const base64String = btoa(String.fromCharCode(...utf8Bytes));
+            return base64String;
+        }
+        const encodedContent = encodeBase64Utf8(updatedContent);
+
+        const payload = {
+            message: `delete <url> for ${locToDelete}`,
+            content: encodedContent,
+            branch: 'main',
+            sha
+        };
+
+        const response = await fetch(apiUrl, {
+            method: 'PUT',
+            headers: {
+                Authorization: `token ${token}`,
+                Accept: 'application/vnd.github.v3+json'
+            },
+            body: JSON.stringify(payload)
+        });
+
+        const result = await response.json();
+        if (response.ok) {
+            console.log(`已從 sitemap.xml 中刪除：${locToDelete}`);
+        } else {
+            console.error('刪除失敗:', result);
+        }
+    }
+    //#endregion
 })();
