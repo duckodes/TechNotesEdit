@@ -478,13 +478,17 @@ const main = (async () => {
         <loc>https://notes.duckode.com/submodule/TechNotesSitemap/${userId}.xml</loc>
         <lastmod>${today}</lastmod>
     </sitemap>`;
-                        await pushSitemapToGitHub(fileToInsert);
+                        await pushSitemapToGitHub(fileToInsert,{
+                            includeCheck: 'sitemapindex'
+                        });
                         const dataName = (await get(ref(database, `technotes/user/${auth.currentUser.uid}/name`))).val();
                         await pushSitemapToGitHub(
                             `    <url>
         <loc>https://notes.duckode.com/?user=${dataName}&amp;category=${category.replaceAll('/', '／')}&amp;categoryID=${index}</loc>
         <lastmod>${today}</lastmod>
-    </url>`, `${userId}.xml`);
+    </url>`, {
+        path: `${userId}.xml`
+    });
 
                         dbEditor.innerHTML = '';
                         manualEditor.innerHTML = '';
@@ -1938,7 +1942,7 @@ const main = (async () => {
 
 
     //#region API更新Sitemap
-    async function pushSitemapToGitHub(fileToInsert, path = 'sitemap.xml') {
+    async function pushSitemapToGitHub(fileToInsert, {path = 'sitemap.xml', includeCheck = 'urlset'}) {
         const apiUrl = `https://api.github.com/repos/duckodes/TechNotesSitemap/contents/${path}`;
 
         const tokenSnapshot = await get(ref(database, `github/${auth.currentUser.uid}/token`));
@@ -1978,10 +1982,10 @@ const main = (async () => {
         function insertUserUrl(existingContent, fileToInsert) {
             const newLoc = extractLocFromXml(fileToInsert);
 
-            // 如果 sitemap 不存在，或不是有效的 <urlset> 結構 → 建立新的
-            if (!existingContent || !existingContent.includes('<urlset')) {
+            // 如果 sitemap 不存在，或不是有效的 <includeCheck> 結構 → 建立新的
+            if (!existingContent || !existingContent.includes(includeCheck)) {
                 console.log('sitemap 不存在，建立新的');
-                const newContent = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${fileToInsert}\n</urlset>`;
+                const newContent = `<?xml version="1.0" encoding="UTF-8"?>\n<${includeCheck} xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${fileToInsert}\n</${includeCheck}>`;
                 return { updatedContent: newContent, didUpdate: true };
             }
 
@@ -1992,7 +1996,7 @@ const main = (async () => {
             }
 
             // 插入新的 <url> 區塊
-            const newContent = existingContent.replace('</urlset>', `${fileToInsert}\n</urlset>`);
+            const newContent = existingContent.replace(`</${includeCheck}>`, `${fileToInsert}\n</${includeCheck}>`);
             console.log(`插入新的 user URL：${newLoc}`);
             return { updatedContent: newContent, didUpdate: true };
         }
