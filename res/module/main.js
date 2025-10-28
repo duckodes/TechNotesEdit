@@ -474,10 +474,10 @@ const main = (async () => {
                         const today = new Date().toISOString().split('T')[0]; // yyyy-mm-dd
 
                         const fileToInsert =
-                            `    <url>
+                            `    <sitemap>
         <loc>https://notes.duckode.com/submodule/TechNotesSitemap/${userId}.xml</loc>
         <lastmod>${today}</lastmod>
-    </url>`;
+    </sitemap>`;
                         await pushSitemapToGitHub(fileToInsert);
                         const dataName = (await get(ref(database, `technotes/user/${auth.currentUser.uid}/name`))).val();
                         await pushSitemapToGitHub(
