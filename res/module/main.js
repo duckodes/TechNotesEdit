@@ -458,13 +458,13 @@ const main = (async () => {
                             const targetSnapshot = await get(targetRef);
                             const nextIndex = targetSnapshot.exists() ? Object.keys(targetSnapshot.val()).length : 0;
 
-                            await set(ref(database, `technotes/data/${auth.currentUser.uid}/${recategory}/${nextIndex}`), noteToMove);
+                            await set(ref(database, `technotes/data/${auth.currentUser.uid}/${recategory.replaceAll('/', '／')}/${nextIndex}`), noteToMove);
                             console.log(`移動 ${category} ${index} 至 ${recategory} ${nextIndex}`);
                         }
                         if (recategory.value !== category) {
                             await moveNote(category, recategory.value, index);
                         } else {
-                            await set(ref(database, `technotes/data/${auth.currentUser.uid}/${category}/${index}`), data[category][index]);
+                            await set(ref(database, `technotes/data/${auth.currentUser.uid}/${category.replaceAll('/', '／')}/${index}`), data[category][index]);
                             console.log(`已更新 ${category} ${index}：`, data[category][index]);
                         }
                         await setTags(tags);
@@ -482,7 +482,7 @@ const main = (async () => {
                         const dataName = (await get(ref(database, `technotes/user/${auth.currentUser.uid}/name`))).val();
                         await pushSitemapToGitHub(
                             `    <url>
-        <loc>https://notes.duckode.com/?user=${dataName}&amp;category=${category}&amp;categoryID=${index}</loc>
+        <loc>https://notes.duckode.com/?user=${dataName}&amp;category=${category.replaceAll('/', '／')}&amp;categoryID=${index}</loc>
         <lastmod>${today}</lastmod>
     </url>`, `${userId}.xml`);
 
@@ -732,7 +732,7 @@ const main = (async () => {
                 await deleteNote(category, index);
 
                 const dataName = (await get(ref(database, `technotes/user/${auth.currentUser.uid}/name`))).val();
-                await deleteUserFromSitemap(`https://notes.duckode.com/?user=${dataName}&amp;category=${category}&amp;categoryID=${index}`, `${auth.currentUser.uid}.xml`);
+                await deleteUserFromSitemap(`https://notes.duckode.com/?user=${dataName}&amp;category=${category.replaceAll('/', '／')}&amp;categoryID=${index}`, `${auth.currentUser.uid}.xml`);
                 await updateData();
                 renderDBEditor();
                 renderManualEditor();
@@ -837,10 +837,10 @@ const main = (async () => {
             if (lastFocusedInput) {
                 insertSyntaxFlexible(
                     lastFocusedInput,
-                    '[img:連結[[]]]',
-                    '連結',
-                    '連結',
-                    '連結'
+                    `[img:https://duckodes.github.io/TechNotesPicture/${auth.currentUser.uid}/[[]]]`,
+                    `https://duckodes.github.io/TechNotesPicture/${auth.currentUser.uid}/`,
+                    `https://duckodes.github.io/TechNotesPicture/${auth.currentUser.uid}/`,
+                    `https://duckodes.github.io/TechNotesPicture/${auth.currentUser.uid}/`
                 );
                 contentTextarea.style.height = "auto";
             }
