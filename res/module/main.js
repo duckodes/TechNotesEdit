@@ -599,8 +599,11 @@ const main = (async () => {
                 });
             }
             function convertToImages(text) {
-                return text.replace(/\[img:([^\[\]]+)\[\[([\s\S]*?)\]\]\]/g, (match, src, alt) => {
-                    return `<img src="${src.trim()}" alt="${alt.trim()}" loading="lazy" />`;
+                return text.replace(/\[img:([^\[\]]+)(?:\[([^\[\]]*)?(?:\[([^\[\]]*)\])?\])?\]/g, (match, src, alt, width) => {
+                    const attrs = [`src="${src.trim()}"`, 'loading="lazy"'];
+                    if (alt) attrs.push(`alt="${alt.trim()}"`);
+                    if (width) attrs.push(`style="width:${width.trim()}"`);
+                    return `<img ${attrs.join(' ')} />`;
                 });
             }
             function convertToHeadings(text) {
