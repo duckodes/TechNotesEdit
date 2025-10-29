@@ -273,6 +273,17 @@ img {
     margin-left: 15px;
 }
 
+.allow-comments {
+    display: flex;
+    align-items: end;
+}
+
+.allow-comments-input {
+    width: fit-content;
+    transform: scale(1.5);
+    margin-left: 15px;
+}
+
 #tagInputContainer {
     display: flex;
     gap: 8px;

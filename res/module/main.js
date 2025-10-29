@@ -303,6 +303,11 @@ const main = (async () => {
                 <input type="checkbox" class="content-input-preview"/>
             </div>
             ${!isFromDB ? '' : `<iframe class="preview-page" src="https://notes.duckode.com/?user=${userName}&category=${category}&categoryID=${index}" width="100%" height="600px" style="border:none;"></iframe>`}
+            
+            <div class="allow-comments">
+                <label>允許留言</label>
+                <input type="checkbox" class="allow-comments-input"/>
+            </div>
 
             <button class="delete">刪除文章</button>
         `;
@@ -460,12 +465,31 @@ const main = (async () => {
 
                             await set(ref(database, `technotes/data/${auth.currentUser.uid}/${recategory.replaceAll('/', '／')}/${nextIndex}`), noteToMove);
                             console.log(`移動 ${category} ${index} 至 ${recategory} ${nextIndex}`);
+
+
+                            // #region 允許評論
+                            const allowCommentsInput = entry.querySelector('.allow-comments-input').checked;
+                            if (allowCommentsInput) {
+                                await set(ref(database, `technotes/data/${auth.currentUser.uid}/${recategory.replaceAll('/', '／')}/${nextIndex}/allowcomments`), true);
+                            } else {
+                                await set(ref(database, `technotes/data/${auth.currentUser.uid}/${recategory.replaceAll('/', '／')}/${nextIndex}/allowcomments`), false);
+                            }
+                            //#endregion
                         }
                         if (recategory.value !== category) {
                             await moveNote(category, recategory.value, index);
                         } else {
                             await set(ref(database, `technotes/data/${auth.currentUser.uid}/${category.replaceAll('/', '／')}/${index}`), data[category][index]);
                             console.log(`已更新 ${category} ${index}：`, data[category][index]);
+
+                            // #region 允許評論
+                            const allowCommentsInput = entry.querySelector('.allow-comments-input').checked;
+                            if (allowCommentsInput) {
+                                await set(ref(database, `technotes/data/${auth.currentUser.uid}/${category.replaceAll('/', '／')}/${index}/allowcomments`), true);
+                            } else {
+                                await set(ref(database, `technotes/data/${auth.currentUser.uid}/${category.replaceAll('/', '／')}/${index}/allowcomments`), false);
+                            }
+                            //#endregion
                         }
                         await setTags(tags);
 
@@ -478,7 +502,7 @@ const main = (async () => {
         <loc>https://notes.duckode.com/submodule/TechNotesSitemap/${userId}.xml</loc>
         <lastmod>${today}</lastmod>
     </sitemap>`;
-                        await pushSitemapToGitHub(fileToInsert,{
+                        await pushSitemapToGitHub(fileToInsert, {
                             includeCheck: 'sitemapindex'
                         });
                         const dataName = (await get(ref(database, `technotes/user/${auth.currentUser.uid}/name`))).val();
@@ -487,8 +511,8 @@ const main = (async () => {
         <loc>https://notes.duckode.com/?user=${dataName}&amp;category=${category.replaceAll('/', '／')}&amp;categoryID=${index}</loc>
         <lastmod>${today}</lastmod>
     </url>`, {
-        path: `${userId}.xml`
-    });
+                            path: `${userId}.xml`
+                        });
 
                         dbEditor.innerHTML = '';
                         manualEditor.innerHTML = '';
@@ -1227,7 +1251,7 @@ const main = (async () => {
 
         renderImages();
 
-        // 標籤
+        // #region 標籤
         const tagInput = entry.querySelector('.tagInput');
         const tagAdd = entry.querySelector('#tagAdd');
         const tagList = entry.querySelector('#tagList');
@@ -1362,8 +1386,16 @@ const main = (async () => {
                 console.warn('找不到任何文章資料');
             }
         }
+        //#endregion
 
 
+
+
+        
+        // #region 允許評論
+        const allowCommentsInput = entry.querySelector('.allow-comments-input');
+        allowCommentsInput.checked = (await get(ref(database, `technotes/data/${auth.currentUser.uid}/${category.replaceAll('/', '／')}/${index}/allowcomments`))).val() || false;
+        //#endregion
     }
 
     function renderDBEditor() {
@@ -1942,7 +1974,7 @@ const main = (async () => {
 
 
     //#region API更新Sitemap
-    async function pushSitemapToGitHub(fileToInsert, {path = 'sitemap.xml', includeCheck = 'urlset'}) {
+    async function pushSitemapToGitHub(fileToInsert, { path = 'sitemap.xml', includeCheck = 'urlset' }) {
         const apiUrl = `https://api.github.com/repos/duckodes/TechNotesSitemap/contents/${path}`;
 
         const tokenSnapshot = await get(ref(database, `github/${auth.currentUser.uid}/token`));
