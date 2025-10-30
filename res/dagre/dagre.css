@@ -3,6 +3,6 @@
     background: #f0f0f0;
 }
 
-svg {
+#diagram-container>svg {
     width: 100%;
 }
