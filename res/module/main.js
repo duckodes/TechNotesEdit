@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
 import { getAuth, onAuthStateChanged, deleteUser } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js";
 import { signInWithEmailAndPassword, signOut, createUserWithEmailAndPassword, updatePassword, updateProfile } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
-import { getDatabase, ref, get, set, update } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-database.js";
+import { getDatabase, ref, get, set, update, onValue, off } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-database.js";
 import fetcher from "./fetcher.js";
 import textareaUtils from "./textarea.utils.js";
 import timer from "./timer.js";
@@ -309,6 +309,8 @@ const main = (async () => {
                 <label>允許留言</label>
                 <input type="checkbox" class="allow-comments-input"/>
             </div>
+            <label>留言</label>
+            <div class="comments-element"></div>
 
             <button class="delete">刪除文章</button>
         `;
@@ -1444,6 +1446,47 @@ const main = (async () => {
         // #region 允許評論
         const allowCommentsInput = entry.querySelector('.allow-comments-input');
         allowCommentsInput.checked = (await get(ref(database, `technotes/data/${auth.currentUser.uid}/${category.replaceAll('/', '／')}/${index}/allowcomments`))).val() || false;
+
+        setupCommentsListener(entry, category, index);
+        function setupCommentsListener(entry, category, index) {
+            const commentsElement = entry.querySelector('.comments-element');
+            const commentsPath = `technotes/data/${auth.currentUser.uid}/${category.replaceAll('/', '／')}/${index}/comments`;
+            const commentsRef = ref(database, commentsPath);
+
+            // 先移除所有 'value' 監聽器（不記錄 callback）
+            off(commentsRef, 'value');
+
+            // 註冊新的監聽器
+            onValue(commentsRef, (snapshot) => {
+                const commentsData = snapshot.val() || {};
+                renderComments(commentsElement, commentsData, commentsPath);
+                data[category][index].comments = commentsData;
+            });
+        }
+
+        function renderComments(commentsElement, commentsData, commentsPath) {
+            commentsElement.innerHTML = ''; // 清空原本內容
+
+            Object.entries(commentsData).forEach(([key, comment]) => {
+                const name = comment.name || '匿名';
+                const message = comment.message || '';
+
+                const div = document.createElement('div');
+                div.textContent = `${name} 說: ${message}`;
+
+                const deleteButton = document.createElement('button');
+                deleteButton.textContent = '刪除留言';
+                deleteButton.addEventListener('click', async () => {
+                    if (confirm(`確定要刪除 ${name} 的留言嗎？`)) {
+                        const commentRef = ref(database, `${commentsPath}/${key}`);
+                        await set(commentRef, null);
+                    }
+                });
+
+                commentsElement.appendChild(div);
+                commentsElement.appendChild(deleteButton);
+            });
+        }
         //#endregion
     }
 

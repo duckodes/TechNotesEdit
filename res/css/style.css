@@ -284,6 +284,26 @@ img {
     margin-left: 15px;
 }
 
+.comments-element {
+    width: 97%;
+    padding: 0.5em;
+    margin-top: 0.2em;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 1em;
+    resize: none;
+    overflow: hidden;
+    font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: space-between; 
+}
+
+.comments-element>button {
+    color: #333;
+    background: #ccc;
+}
+
 #tagInputContainer {
     display: flex;
     gap: 8px;
