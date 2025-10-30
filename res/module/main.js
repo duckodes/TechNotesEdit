@@ -748,6 +748,7 @@ const main = (async () => {
 
                 const defaultOptions = {
                     parent: 'document.body',
+                    size: '',
                     dir: 'LR',
                     nodePadding: 20,
                     nodefontSize: 14,
