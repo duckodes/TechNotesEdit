@@ -57,7 +57,7 @@ const dagreUtils = (() => {
 
         const diagramContainer = document.createElement('div');
         diagramContainer.className = 'diagram-container';
-        diagramContainer.style.width = size;
+        diagramContainer.style.maxWidth = size;
         const diagramSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
         diagramSvg.setAttribute('class', 'diagram');
         diagramSvg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
