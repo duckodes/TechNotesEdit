@@ -786,7 +786,6 @@ const main = (async () => {
                     const result = dagreUtils.render(transitions, options)
                         .replace(/^\s*[\r\n]/gm, '')
                         .replace(/\n+/g, '');
-                    console.log(result);
                     return typeof result === 'string' ? result : '';
                 });
             }
