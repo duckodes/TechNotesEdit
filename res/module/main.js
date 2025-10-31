@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
 import { getAuth, onAuthStateChanged, deleteUser } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js";
 import { signInWithEmailAndPassword, signOut, createUserWithEmailAndPassword, updatePassword, updateProfile } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
-import { getDatabase, ref, get, set, update, onValue, off } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-database.js";
+import { getDatabase, ref, get, set, update, onValue, off, push } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-database.js";
 import fetcher from "./fetcher.js";
 import textareaUtils from "./textarea.utils.js";
 import timer from "./timer.js";
@@ -1472,8 +1472,52 @@ const main = (async () => {
                 const name = comment.name || '匿名';
                 const message = comment.message || '';
 
-                const div = document.createElement('div');
-                div.textContent = `${name} 說: ${message}`;
+                const container = document.createElement('div');
+                container.className = 'comment-container';
+                const messageElement = document.createElement('div');
+                messageElement.textContent = `${name} 說: ${message}`;
+
+                const replyButton = document.createElement('button');
+                replyButton.textContent = '回覆';
+                const replyForm = document.createElement('form');
+                replyForm.className = 'reply-form';
+                replyForm.style.display = 'none';
+                replyForm.innerHTML = `
+      <textarea name="replyMessage" rows="2" placeholder="輸入回覆內容..." required></textarea>
+      <button type="submit">送出回覆</button>
+    `;
+                replyButton.addEventListener('click', () => {
+                    replyForm.style.display = replyForm.style.display === 'none' ? 'block' : 'none';
+                });
+
+                replyForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    const replyContainer = document.createElement('div');
+                    replyContainer.className = 'reply-container';
+                    const replyMessage = replyForm.replyMessage.value.trim();
+                    if (!replyMessage) return;
+
+                    const messageElement = document.createElement('div');
+                    messageElement.className = 'reply-comment';
+                    messageElement.textContent = `${userName} 回覆 ${name} 說: ${replyMessage}`;
+
+                    const deleteButton = document.createElement('button');
+                    deleteButton.textContent = '刪除留言';
+                    deleteButton.addEventListener('click', async () => {
+                        if (confirm(`確定要刪除 ${replyName} 的留言嗎？`)) {
+                            const commentRef = ref(database, `${commentsPath}/${key}/replies/${replyKey}`);
+                            await set(commentRef, null);
+                        }
+                    });
+                    replyContainer.appendChild(messageElement);
+                    replyContainer.appendChild(deleteButton);
+                    commentsElement.appendChild(replyContainer);
+
+                    await push(ref(database, `technotes/data/${auth.currentUser.uid}/${category}/${index}/comments/${key}/replies`), { name: userName, message: replyMessage, nameColor: 'var(--accent)' });
+
+                    replyForm.reset();
+                    replyForm.style.display = 'none';
+                });
 
                 const deleteButton = document.createElement('button');
                 deleteButton.textContent = '刪除留言';
@@ -1484,8 +1528,36 @@ const main = (async () => {
                     }
                 });
 
-                commentsElement.appendChild(div);
-                commentsElement.appendChild(deleteButton);
+                container.appendChild(messageElement);
+                container.appendChild(replyButton);
+                container.appendChild(replyForm);
+                container.appendChild(deleteButton);
+                commentsElement.appendChild(container);
+
+                if (comment.replies) {
+                    Object.entries(comment.replies).forEach(([replyKey, replyComment]) => {
+                        const replyContainer = document.createElement('div');
+                        replyContainer.className = 'reply-container';
+                        const replyName = replyComment.name || '匿名';
+                        const replyMessage = replyComment.message || '';
+
+                        const messageElement = document.createElement('div');
+                        messageElement.className = 'reply-comment';
+                        messageElement.textContent = `${replyName} 回覆 ${name} 說: ${replyMessage}`;
+
+                        const deleteButton = document.createElement('button');
+                        deleteButton.textContent = '刪除留言';
+                        deleteButton.addEventListener('click', async () => {
+                            if (confirm(`確定要刪除 ${replyName} 的留言嗎？`)) {
+                                const commentRef = ref(database, `${commentsPath}/${key}/replies/${replyKey}`);
+                                await set(commentRef, null);
+                            }
+                        });
+                        replyContainer.appendChild(messageElement);
+                        replyContainer.appendChild(deleteButton);
+                        commentsElement.appendChild(replyContainer);
+                    });
+                }
             });
         }
         //#endregion

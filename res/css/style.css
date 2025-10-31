@@ -295,13 +295,29 @@ img {
     overflow: hidden;
     font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
     display: flex;
-    align-items: center;
-    justify-content: space-between; 
+    flex-direction: column;
+    justify-content: center;
 }
 
 .comments-element>button {
     color: #333;
     background: #ccc;
+}
+
+.comment-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.reply-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.reply-comment {
+    margin-left: 50px;
 }
 
 #tagInputContainer {
