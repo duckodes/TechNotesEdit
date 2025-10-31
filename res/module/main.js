@@ -767,11 +767,12 @@ const main = (async () => {
                 };
 
                 return text.replace(/\[dagre(?::([^\[\]]+))?\[\[([\s\S]*?)\]\]\]/g, (match, optionString = '', rawArg) => {
-                    // 自訂語法：{a, b} → { from: "a", to: "b" }
-                    const pairs = [...rawArg.matchAll(/\{([^,{}]+)\s*,\s*([^,{}]+)\}/g)];
-                    const transitions = pairs.map(([_, from, to]) => ({
+                    // 支援語法：{a, b, type} → { from: "a", to: "b", type: "type" }
+                    const pairs = [...rawArg.matchAll(/\{([^,{}]+)\s*,\s*([^,{}]+)(?:\s*,\s*([^,{}]+))?\}/g)];
+                    const transitions = pairs.map(([_, from, to, type]) => ({
                         from: from.trim(),
-                        to: to.trim()
+                        to: to.trim(),
+                        ...(type ? { type: type.trim() } : {})
                     }));
 
                     const options = { ...defaultOptions };
@@ -785,7 +786,6 @@ const main = (async () => {
                         });
                     }
 
-                    // 呼叫 dagreUtils.render 並回傳 HTML 字串
                     const result = dagreUtils.render(transitions, options)
                         .replace(/^\s*[\r\n]/gm, '')
                         .replace(/\n+/g, '');
