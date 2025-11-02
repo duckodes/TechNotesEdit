@@ -1567,12 +1567,117 @@ const main = (async () => {
         dbEditor.innerHTML = '';
 
         if (!data) return;
+        const selectorContainer = document.createElement('h2');
+        selectorContainer.textContent = '篩選: ';
+        dbEditor.appendChild(selectorContainer);
+        const categorySelector = document.createElement('select');
+        selectorContainer.appendChild(categorySelector);
+        const tagsSelector = document.createElement('select');
+        selectorContainer.appendChild(tagsSelector);
+
+        const allCategoryOption = document.createElement('option');
+        allCategoryOption.textContent = '全部分類';
+        categorySelector.appendChild(allCategoryOption);
+        const allTagsOption = document.createElement('option');
+        allTagsOption.textContent = '全部標籤';
+        tagsSelector.appendChild(allTagsOption);
+
+        categorySelector.addEventListener('change', () => {
+            dbEditor.innerHTML = '';
+            dbEditor.appendChild(selectorContainer);
+            Object.entries(data).forEach(async ([category, items]) => {
+                const taggedItems = await Promise.all(
+                    items.map(async (item, index) => {
+                        const snapshot = await get(ref(database, `technotes/data/${auth.currentUser.uid}/${category}/${index}/tags`));
+                        const tags = snapshot.val() || [];
+                        return { item, index, tags };
+                    })
+                );
+
+                const filteredItems = taggedItems.filter(entry =>
+                    Array.isArray(entry.tags) && entry.tags.includes(tagsSelector.value)
+                );
+
+                if (filteredItems.length > 0) {
+                    if (categorySelector.value !== category && categorySelector.value !== '全部分類') return;
+
+                    const categoryTitle = document.createElement('h3');
+                    categoryTitle.textContent = `主要分類：${category}`;
+                    dbEditor.appendChild(categoryTitle);
+
+                    filteredItems.forEach(({ item, index }) => {
+                        createEntryUI(item, dbEditor, true, index, category);
+                    });
+                } else if (tagsSelector.value.includes('全部標籤')) {
+                    if (categorySelector.value !== category && categorySelector.value !== '全部分類') return;
+
+                    const categoryTitle = document.createElement('h3');
+                    categoryTitle.textContent = `主要分類：${category}`;
+                    dbEditor.appendChild(categoryTitle);
+                    items.forEach((item, index) => {
+                        createEntryUI(item, dbEditor, true, index, category);
+                    });
+                }
+            });
+        });
+        tagsSelector.addEventListener('change', () => {
+            dbEditor.innerHTML = '';
+            dbEditor.appendChild(selectorContainer);
+            Object.entries(data).forEach(async ([category, items]) => {
+                const taggedItems = await Promise.all(
+                    items.map(async (item, index) => {
+                        const snapshot = await get(ref(database, `technotes/data/${auth.currentUser.uid}/${category}/${index}/tags`));
+                        const tags = snapshot.val() || [];
+                        return { item, index, tags };
+                    })
+                );
+
+                const filteredItems = taggedItems.filter(entry =>
+                    Array.isArray(entry.tags) && entry.tags.includes(tagsSelector.value)
+                );
+
+                if (filteredItems.length > 0) {
+                    if (categorySelector.value !== category && categorySelector.value !== '全部分類') return;
+
+                    const categoryTitle = document.createElement('h3');
+                    categoryTitle.textContent = `主要分類：${category}`;
+                    dbEditor.appendChild(categoryTitle);
+
+                    filteredItems.forEach(({ item, index }) => {
+                        createEntryUI(item, dbEditor, true, index, category);
+                    });
+                } else if (tagsSelector.value.includes('全部標籤')) {
+                    if (categorySelector.value !== category && categorySelector.value !== '全部分類') return;
+
+                    const categoryTitle = document.createElement('h3');
+                    categoryTitle.textContent = `主要分類：${category}`;
+                    dbEditor.appendChild(categoryTitle);
+                    items.forEach((item, index) => {
+                        createEntryUI(item, dbEditor, true, index, category);
+                    });
+                }
+            });
+        });
+        const addedTags = new Set();
         Object.entries(data).forEach(([category, items]) => {
+            const categoryOption = document.createElement('option');
+            categoryOption.textContent = category;
+            categorySelector.appendChild(categoryOption);
+
             const categoryTitle = document.createElement('h3');
             categoryTitle.textContent = `主要分類：${category}`;
             dbEditor.appendChild(categoryTitle);
 
             items.forEach((item, index) => {
+                item.tags.forEach(tag => {
+                    if (!addedTags.has(tag)) {
+                        addedTags.add(tag);
+                        const tagsOption = document.createElement('option');
+                        tagsOption.textContent = tag;
+                        tagsSelector.appendChild(tagsOption);
+                    }
+                });
+
                 createEntryUI(item, dbEditor, true, index, category);
             });
         });
