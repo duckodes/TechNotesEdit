@@ -17,6 +17,14 @@ const main = (async () => {
     const dbEditor = document.getElementById('dbEditor');
     const manualEditor = document.getElementById('manualEditor');
     const addEntryBtn = document.getElementById('addEntryBtn');
+    const sideBar = document.querySelector('.sidebar');
+    const appElement = document.querySelector('.app');
+    const mainElement = document.querySelector('.main');
+    const categoryList = document.getElementById('categoryList');
+    const categoryAll = document.querySelector('.categoryAll');
+    const addNewArticle = document.querySelector('.addNewArticle');
+    const settings = document.querySelector('.settings');
+    const manualEditorTitle = document.getElementById('manualEditorTitle');
     let data = !techNotes.val() ? {
         '無資料': [
             // {
@@ -53,7 +61,7 @@ const main = (async () => {
 
             const containerLogout = document.createElement('div');
             containerLogout.className = 'logout-container';
-            document.body.appendChild(containerLogout);
+            sideBar.appendChild(containerLogout);
             const logoutButton = document.createElement('button');
             logoutButton.textContent = '登出';
             logoutButton.addEventListener('click', () => {
@@ -64,7 +72,11 @@ const main = (async () => {
                 location.reload();
             });
             containerLogout.appendChild(logoutButton);
+
+            renderChangePassword();
+
             const deleteAccountButton = document.createElement('button');
+            deleteAccountButton.className = 'delete-account-button';
             deleteAccountButton.textContent = '刪除帳號';
             deleteAccountButton.addEventListener('click', async () => {
                 if (!confirm('確定要刪除帳號嗎? 此操作無法復原')) return;
@@ -78,16 +90,38 @@ const main = (async () => {
                 await deleteUser(user);
                 location.reload();
             });
-            containerLogout.appendChild(deleteAccountButton);
+            mainElement.appendChild(deleteAccountButton);
 
-            renderChangePassword();
             await expirationTime(user);
+            sideBar.style.display = 'block';
+            mainElement.style.display = 'block';
+            const setMainPages = (key) => {
+                Array.from(mainElement.children).forEach((mainChild, index) => {
+                    if (index === 0 || index === 3) return;
+                    mainChild.style.display = 'none';
+                });
+                switch (key) {
+                    case 'dbEditor':
+                        dbEditor.style.display = '';
+                        break;
+                    case 'manualEditor':
+                        manualEditor.style.display = '';
+                        manualEditorTitle.style.display = '';
+                        break;
+                    case 'profileContainer':
+                        document.querySelector('.profile-container').style.display = '';
+                        document.querySelector('.change-password-container').style.display = '';
+                        document.querySelector('.delete-account-button').style.display = '';
+                        break;
+                }
+            }
+            setMainPages('profileContainer');
         }
     });
     async function expirationTime(user) {
         const timer = document.createElement('p');
         timer.textContent = new Date(Date.parse((await user.getIdTokenResult()).expirationTime)).toLocaleString() + ' 過期';
-        document.body.insertBefore(timer, document.body.children[3]);
+        mainElement.insertBefore(timer, mainElement.children[3]);
     }
     function createLogin() {
         const container = document.createElement('div');
@@ -118,19 +152,20 @@ const main = (async () => {
         const loginStatus = document.createElement('div');
         loginStatus.className = 'login-status';
         loginStatus.textContent = '註冊';
+        const button = document.createElement('button');
+        button.textContent = '登入';
         loginStatus.onclick = () => {
             if (loginStatus.textContent === '登入') {
                 loginStatus.textContent = '註冊';
                 title.textContent = '登入';
+                button.textContent = '登入';
             } else {
                 loginStatus.textContent = '登入';
                 title.textContent = '註冊';
+                button.textContent = '註冊';
             }
         };
         container.appendChild(loginStatus);
-
-        const button = document.createElement('button');
-        button.textContent = '顯示輸入內容';
         container.appendChild(button);
 
         button.onclick = async () => {
@@ -190,7 +225,7 @@ const main = (async () => {
             passwordInput.removeEventListener('keydown', handleKey);
         });
 
-        document.body.appendChild(container);
+        appElement.appendChild(container);
     }
 
     async function createEntryUI(item, container, isFromDB = false, index = null, category = null) {
@@ -1563,8 +1598,19 @@ const main = (async () => {
         //#endregion
     }
 
+    const categoryManager = {
+        items: [],
+        add(item) {
+            this.items.push(item);
+        },
+        clear() {
+            this.items.forEach(el => el.remove());
+            this.items.length = 0;
+        }
+    };
     function renderDBEditor() {
         dbEditor.innerHTML = '';
+        categoryManager.clear();
 
         if (!data) return;
         const selectorContainer = document.createElement('h2');
@@ -1659,6 +1705,26 @@ const main = (async () => {
             });
         });
         const addedTags = new Set();
+        const setMainPages = (key) => {
+            Array.from(mainElement.children).forEach((mainChild, index) => {
+                if (index === 0 || index === 3) return;
+                mainChild.style.display = 'none';
+            });
+            switch (key) {
+                case 'dbEditor':
+                    dbEditor.style.display = '';
+                    break;
+                case 'manualEditor':
+                    manualEditor.style.display = '';
+                    manualEditorTitle.style.display = '';
+                    break;
+                case 'profileContainer':
+                    document.querySelector('.profile-container').style.display = '';
+                    document.querySelector('.change-password-container').style.display = '';
+                    document.querySelector('.delete-account-button').style.display = '';
+                    break;
+            }
+        }
         Object.entries(data).forEach(([category, items]) => {
             const categoryOption = document.createElement('option');
             categoryOption.textContent = category;
@@ -1669,7 +1735,7 @@ const main = (async () => {
             dbEditor.appendChild(categoryTitle);
 
             items.forEach((item, index) => {
-                item.tags.forEach(tag => {
+                item.tags?.forEach(tag => {
                     if (!addedTags.has(tag)) {
                         addedTags.add(tag);
                         const tagsOption = document.createElement('option');
@@ -1680,6 +1746,52 @@ const main = (async () => {
 
                 createEntryUI(item, dbEditor, true, index, category);
             });
+
+            const categoryListItem = document.createElement('li');
+            categoryManager.add(categoryListItem);
+            categoryListItem.textContent = category;
+            categoryListItem.addEventListener('click', (e) => {
+                document.querySelectorAll('.sidebar li').forEach(li => li.classList.remove('active'));
+                e.target.classList.add('active');
+                dbEditor.innerHTML = '';
+                if (e.target.textContent !== category) return;
+
+                const categoryTitle = document.createElement('h3');
+                categoryTitle.textContent = `主要分類：${category}`;
+                dbEditor.appendChild(categoryTitle);
+                items.forEach((item, index) => {
+                    createEntryUI(item, dbEditor, true, index, category);
+                });
+                setMainPages('dbEditor');
+            });
+
+            categoryList.appendChild(categoryListItem);
+        });
+        categoryAll.addEventListener('click', (e) => {
+            document.querySelectorAll('.sidebar li').forEach(li => li.classList.remove('active'));
+            e.target.classList.add('active');
+            dbEditor.innerHTML = '';
+            dbEditor.appendChild(selectorContainer);
+
+            Object.entries(data).forEach(async ([category, items]) => {
+                const categoryTitle = document.createElement('h3');
+                categoryTitle.textContent = `主要分類：${category}`;
+                dbEditor.appendChild(categoryTitle);
+                items.forEach((item, index) => {
+                    createEntryUI(item, dbEditor, true, index, category);
+                });
+            });
+            setMainPages('dbEditor');
+        });
+        addNewArticle.addEventListener('click', (e) => {
+            document.querySelectorAll('.sidebar li').forEach(li => li.classList.remove('active'));
+            e.target.classList.add('active');
+            setMainPages('manualEditor')
+        });
+        settings.addEventListener('click', (e) => {
+            document.querySelectorAll('.sidebar li').forEach(li => li.classList.remove('active'));
+            e.target.classList.add('active');
+            setMainPages('profileContainer');
         });
     }
 
@@ -1800,7 +1912,7 @@ const main = (async () => {
         status.style.marginTop = '10px';
         container.appendChild(status);
 
-        document.body.appendChild(container);
+        mainElement.appendChild(container);
 
         button.addEventListener('click', async () => {
             const newPassword = input.value;

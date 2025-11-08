@@ -12,14 +12,28 @@
 
 <body>
 
-    <h1>開發技術文章編輯器</h1>
-    <h2>📂 資料庫分類編輯</h2>
+    <div class="app">
+        <div class="sidebar">
 
-    <h2 id="manualEditorTitle">新增分類</h2>
-    <button id="addEntryBtn">新增分類</button>
-    <div id="manualEditor"></div>
-    
-    <div id="dbEditor"></div>
+            <h1>開發技術文章編輯器</h1>
+            <h2>📂 分類</h2>
+            <ul id="categoryList">
+                <li class="categoryAll">全部文章</li>
+            </ul>
+            <ul>
+                <li class="addNewArticle">+新增文章</li>
+                <li class="settings active">設定</li>
+            </ul>
+        </div>
+        <div class="main">
+            <h2>資料庫分類編輯</h2>
+            <h2 id="manualEditorTitle">新增分類</h2>
+            <button id="addEntryBtn">新增分類</button>
+            <div id="manualEditor"></div>
+
+            <div id="dbEditor"></div>
+        </div>
+    </div>
 
     <script src="res/dagre/dagre.min.js"></script>
     <script type="module" src="res/module/main.js"></script>
