@@ -8,6 +8,12 @@ import timer from "./timer.js";
 import dagreUtils from "./dagre.utils.js";
 
 const main = (async () => {
+    function setRealHeight() {
+  document.documentElement.style.setProperty('--vh', window.innerHeight * 0.01 + 'px');
+}
+setRealHeight();
+window.addEventListener('resize', setRealHeight);
+
     const firebaseConfig = await fetcher.load('../res/config/firebaseConfig.json');
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);

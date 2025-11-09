@@ -1,8 +1,15 @@
+html {
+    max-height: 100dvh;
+    overflow: hidden;
+}
+
 body {
     font-family: sans-serif;
     background: #f9f9f9;
     margin: 0;
     color: #333;
+    max-height: 100dvh;
+    overflow: hidden;
 }
 
 select {
@@ -385,7 +392,7 @@ img {
 
 .app {
     display: flex;
-    height: 100vh;
+    height: calc(var(--vh) * 100);
     flex-direction: row;
     overflow: hidden;
 }
