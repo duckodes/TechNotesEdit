@@ -232,6 +232,7 @@ img {
     width: 100%;
     display: flex;
     justify-content: flex-end;
+    margin-top: auto;
 }
 
 .logout-container button {
@@ -394,6 +395,8 @@ img {
     color: white;
     padding: 20px;
     display: none;
+    flex-direction: column;
+    overflow: auto;
 }
 
 .sidebar h2 {
@@ -432,28 +435,48 @@ img {
 
     .sidebar {
         width: 100%;
-        display: flex;
-        flex-direction: column;
         display: none;
+        flex-direction: column;
     }
 
     .sidebar h1 {
         margin: 0;
+        font-size: 20px;
+        text-align: center;
+        user-select: none;
+        -moz-user-select: none;
+    }
+
+    .sidebar:hover h2 {
+        display: block;
+    }
+
+    .sidebar:hover ul {
+        display: block;
+    }
+
+    .sidebar:hover .logout-container {
+        display: flex;
     }
 
     .sidebar h2 {
         margin: 0;
+        font-size: 12px;
+        display: none;
     }
 
     .sidebar ul {
-        display: flex;
+        display: none;
         flex-direction: row;
         gap: 10px;
-        overflow-x: auto;
     }
 
     .sidebar li {
         flex-shrink: 0;
+    }
+
+    .sidebar .logout-container {
+        display: none;
     }
 }
 
@@ -471,6 +494,7 @@ img {
 }
 
 .tip-gray {
+    padding-left: 25px;
     color: #ccc5;
     text-align: end;
 }

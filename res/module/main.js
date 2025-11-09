@@ -93,7 +93,7 @@ const main = (async () => {
             mainElement.appendChild(deleteAccountButton);
 
             await expirationTime(user);
-            sideBar.style.display = 'block';
+            sideBar.style.display = 'flex';
             mainElement.style.display = 'block';
             const setMainPages = (key) => {
                 Array.from(mainElement.children).forEach((mainChild, index) => {
