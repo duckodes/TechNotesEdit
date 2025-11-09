@@ -463,3 +463,14 @@ img {
     overflow-y: auto;
     display: none;
 }
+
+.tip-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.tip-gray {
+    color: #ccc5;
+    text-align: end;
+}

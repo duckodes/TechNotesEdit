@@ -1724,6 +1724,7 @@ const main = (async () => {
                     break;
             }
         }
+        let totalItemsLength = 0;
         Object.entries(data).forEach(([category, items]) => {
             const categoryOption = document.createElement('option');
             categoryOption.textContent = category;
@@ -1733,27 +1734,28 @@ const main = (async () => {
             categoryTitle.textContent = `主要分類：${category}`;
             dbEditor.appendChild(categoryTitle);
 
-            // items.forEach((item, index) => {
-            //     item.tags?.forEach(tag => {
-            //         if (!addedTags.has(tag)) {
-            //             addedTags.add(tag);
-            //             const tagsOption = document.createElement('option');
-            //             tagsOption.textContent = tag;
-            //             tagsSelector.appendChild(tagsOption);
-            //         }
-            //     });
+            items.forEach((item, index) => {
+                item.tags?.forEach(tag => {
+                    if (!addedTags.has(tag)) {
+                        addedTags.add(tag);
+                        const tagsOption = document.createElement('option');
+                        tagsOption.textContent = tag;
+                        tagsSelector.appendChild(tagsOption);
+                    }
+                });
 
-            //     createEntryUI(item, dbEditor, true, index, category);
-            // });
+                // createEntryUI(item, dbEditor, true, index, category);
+            });
 
             const categoryListItem = document.createElement('li');
             categoryManager.add(categoryListItem);
             categoryListItem.textContent = category;
+            categoryListItem.dataset.category = category;
             categoryListItem.addEventListener('click', (e) => {
                 document.querySelectorAll('.sidebar li').forEach(li => li.classList.remove('active'));
                 e.target.classList.add('active');
                 dbEditor.innerHTML = '';
-                if (e.target.textContent !== category) return;
+                if (e.target.dataset.category !== category) return;
 
                 const categoryTitle = document.createElement('h3');
                 categoryTitle.textContent = `主要分類：${category}`;
@@ -1765,7 +1767,16 @@ const main = (async () => {
             });
 
             categoryList.appendChild(categoryListItem);
+
+            document.querySelectorAll('.sidebar li').forEach(li => {
+                if (li.textContent !== category) return;
+                li.classList.add('tip-row');
+                li.innerHTML += `<span class="tip-gray">${items.length}</span>`;
+            });
+            totalItemsLength += items.length;
         });
+        categoryAll.classList.add('tip-row');
+        categoryAll.innerHTML += `<span class="tip-gray">${totalItemsLength}</span>`;
         categoryAll.addEventListener('click', (e) => {
             document.querySelectorAll('.sidebar li').forEach(li => li.classList.remove('active'));
             e.target.classList.add('active');
