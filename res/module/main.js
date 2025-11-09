@@ -779,7 +779,6 @@ const main = (async () => {
                 return parseBlock(text.trim());
             }
             function convertDagreSyntax(text) {
-                console.log('轉換 dagre 語法中...');
 
                 const defaultOptions = {
                     parent: 'document.body',
@@ -1734,18 +1733,18 @@ const main = (async () => {
             categoryTitle.textContent = `主要分類：${category}`;
             dbEditor.appendChild(categoryTitle);
 
-            items.forEach((item, index) => {
-                item.tags?.forEach(tag => {
-                    if (!addedTags.has(tag)) {
-                        addedTags.add(tag);
-                        const tagsOption = document.createElement('option');
-                        tagsOption.textContent = tag;
-                        tagsSelector.appendChild(tagsOption);
-                    }
-                });
+            // items.forEach((item, index) => {
+            //     item.tags?.forEach(tag => {
+            //         if (!addedTags.has(tag)) {
+            //             addedTags.add(tag);
+            //             const tagsOption = document.createElement('option');
+            //             tagsOption.textContent = tag;
+            //             tagsSelector.appendChild(tagsOption);
+            //         }
+            //     });
 
-                createEntryUI(item, dbEditor, true, index, category);
-            });
+            //     createEntryUI(item, dbEditor, true, index, category);
+            // });
 
             const categoryListItem = document.createElement('li');
             categoryManager.add(categoryListItem);
