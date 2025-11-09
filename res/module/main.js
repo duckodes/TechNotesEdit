@@ -338,7 +338,7 @@ const main = (async () => {
                 <label>內容檢視</label>
                 <input type="checkbox" class="content-input-preview"/>
             </div>
-            ${!isFromDB ? '' : `<iframe class="preview-page" src="https://notes.duckode.com/?user=${userName}&category=${category}&categoryID=${index}" width="100%" height="600px" style="border:none;"></iframe>`}
+            ${!isFromDB ? '' : `<iframe class="preview-page" src="" width="100%" height="600px" style="border:none;" data-src="https://notes.duckode.com/?user=${userName}&category=${category}&categoryID=${index}"></iframe>`}
             
             <div class="allow-comments">
                 <label>允許留言</label>
@@ -375,7 +375,7 @@ const main = (async () => {
                     const iframe = entry.querySelector('.preview-page');
                     if (iframe) {
                         iframe.style.visibility = 'visible';
-                        iframe.src = iframe.src;
+                        iframe.src = iframe.getAttribute('data-src');
                         resizeTimer = null;
                     }
                 }, 500);
@@ -395,7 +395,7 @@ const main = (async () => {
             if (!iframe) return;
             if (contentInputPreview.checked) {
                 iframe.style.display = '';
-                iframe.src = iframe.src;
+                iframe.src = iframe.getAttribute('data-src');
             } else {
                 iframe.style.display = 'none';
             }
