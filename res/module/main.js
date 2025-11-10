@@ -1616,6 +1616,37 @@ window.addEventListener('resize', setRealHeight);
     function renderDBEditor() {
         dbEditor.innerHTML = '';
         categoryManager.clear();
+        
+        const setMainPages = (key) => {
+            Array.from(mainElement.children).forEach((mainChild, index) => {
+                if (index === 0 || index === 3) return;
+                mainChild.style.display = 'none';
+            });
+            switch (key) {
+                case 'dbEditor':
+                    dbEditor.style.display = '';
+                    break;
+                case 'manualEditor':
+                    manualEditor.style.display = '';
+                    manualEditorTitle.style.display = '';
+                    break;
+                case 'profileContainer':
+                    document.querySelector('.profile-container').style.display = '';
+                    document.querySelector('.change-password-container').style.display = '';
+                    document.querySelector('.delete-account-button').style.display = '';
+                    break;
+            }
+        }
+        addNewArticle.addEventListener('click', (e) => {
+            document.querySelectorAll('.sidebar li').forEach(li => li.classList.remove('active'));
+            e.target.classList.add('active');
+            setMainPages('manualEditor');
+        });
+        settings.addEventListener('click', (e) => {
+            document.querySelectorAll('.sidebar li').forEach(li => li.classList.remove('active'));
+            e.target.classList.add('active');
+            setMainPages('profileContainer');
+        });
 
         if (!data) return;
         const selectorContainer = document.createElement('h2');
@@ -1710,26 +1741,6 @@ window.addEventListener('resize', setRealHeight);
             });
         });
         const addedTags = new Set();
-        const setMainPages = (key) => {
-            Array.from(mainElement.children).forEach((mainChild, index) => {
-                if (index === 0 || index === 3) return;
-                mainChild.style.display = 'none';
-            });
-            switch (key) {
-                case 'dbEditor':
-                    dbEditor.style.display = '';
-                    break;
-                case 'manualEditor':
-                    manualEditor.style.display = '';
-                    manualEditorTitle.style.display = '';
-                    break;
-                case 'profileContainer':
-                    document.querySelector('.profile-container').style.display = '';
-                    document.querySelector('.change-password-container').style.display = '';
-                    document.querySelector('.delete-account-button').style.display = '';
-                    break;
-            }
-        }
         let totalItemsLength = 0;
         Object.entries(data).forEach(([category, items]) => {
             const categoryOption = document.createElement('option');
@@ -1798,16 +1809,6 @@ window.addEventListener('resize', setRealHeight);
                 });
             });
             setMainPages('dbEditor');
-        });
-        addNewArticle.addEventListener('click', (e) => {
-            document.querySelectorAll('.sidebar li').forEach(li => li.classList.remove('active'));
-            e.target.classList.add('active');
-            setMainPages('manualEditor')
-        });
-        settings.addEventListener('click', (e) => {
-            document.querySelectorAll('.sidebar li').forEach(li => li.classList.remove('active'));
-            e.target.classList.add('active');
-            setMainPages('profileContainer');
         });
     }
 
