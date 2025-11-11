@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
 import { getAuth, onAuthStateChanged, deleteUser } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js";
-import { signInWithEmailAndPassword, signOut, createUserWithEmailAndPassword, updatePassword, updateProfile } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
+import { signInWithEmailAndPassword, signOut, createUserWithEmailAndPassword, updatePassword, updateProfile } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js";
 import { getDatabase, ref, get, set, update, onValue, off, push } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-database.js";
 import fetcher from "./fetcher.js";
 import textareaUtils from "./textarea.utils.js";
@@ -9,10 +9,10 @@ import dagreUtils from "./dagre.utils.js";
 
 const main = (async () => {
     function setRealHeight() {
-  document.documentElement.style.setProperty('--vh', window.innerHeight * 0.01 + 'px');
-}
-setRealHeight();
-window.addEventListener('resize', setRealHeight);
+        document.documentElement.style.setProperty('--vh', window.innerHeight * 0.01 + 'px');
+    }
+    setRealHeight();
+    window.addEventListener('resize', setRealHeight);
 
     const firebaseConfig = await fetcher.load('../res/config/firebaseConfig.json');
     const app = initializeApp(firebaseConfig);
@@ -1616,7 +1616,7 @@ window.addEventListener('resize', setRealHeight);
     function renderDBEditor() {
         dbEditor.innerHTML = '';
         categoryManager.clear();
-        
+
         const setMainPages = (key) => {
             Array.from(mainElement.children).forEach((mainChild, index) => {
                 if (index === 0 || index === 3) return;
@@ -2207,6 +2207,29 @@ window.addEventListener('resize', setRealHeight);
             }
         };
 
+        if (auth.currentUser.uid === "DPcmhV427VQNJ9ojiOTD2aYyuE83") {
+            const resetPasswordContainer = document.createElement('div');
+            resetPasswordContainer.style.display = 'flex';
+            resetPasswordContainer.style.margin = 'auto';
+            container.appendChild(resetPasswordContainer);
+            const inputTargetUID = document.createElement('input');
+            inputTargetUID.type = 'text';
+            inputTargetUID.placeholder = '用戶UID..';
+            resetPasswordContainer.appendChild(inputTargetUID);
+            const inputNewPassword = document.createElement('input');
+            inputNewPassword.type = 'password';
+            inputNewPassword.placeholder = '新密碼..';
+            resetPasswordContainer.appendChild(inputNewPassword);
+            const resetPasswordButton = document.createElement('button');
+            resetPasswordButton.textContent = '更新用戶密碼';
+            resetPasswordButton.style.width = '100%';
+            resetPasswordButton.style.maxWidth = '250px';
+            resetPasswordButton.addEventListener('click', () => {
+                resetPassword({ targetUID: inputTargetUID.value, newPassword: inputNewPassword.value});
+            });
+            resetPasswordContainer.appendChild(resetPasswordButton);
+        }
+
         container.appendChild(status);
 
         dbEditor.parentNode.insertBefore(container, dbEditor);
@@ -2548,6 +2571,40 @@ window.addEventListener('resize', setRealHeight);
         } else {
             console.error('刪除失敗:', result);
         }
+    }
+    //#endregion
+
+    //#region FunctionsAPI
+    async function functionsAPI(url, body = null) {
+        const idToken = await auth.currentUser.getIdToken();
+        const fetchOptions = {
+            method: 'POST',
+            headers: {
+                'authorization': `Bearer ${idToken}`,
+                'Content-Type': 'application/json'
+            }
+        };
+
+        if (body) fetchOptions.body = JSON.stringify(body);
+
+        try {
+            const response = await fetch(url, fetchOptions);
+            const result = await response.json();
+
+            if (!response.ok) {
+                console.error('request failed', result.message);
+                return { success: false, message: result.message };
+            }
+            console.log('success: ', result.message);
+            return { success: true, message: result.message };
+
+        } catch (error) {
+            console.error('Connect Error：', error.message);
+            return { success: false, message: error.message };
+        }
+    }
+    async function resetPassword({ targetUID, newPassword }) {
+        return await functionsAPI('https://resetpassword-uqj7m73rbq-uc.a.run.app', { targetUID, newPassword });
     }
     //#endregion
 })();
