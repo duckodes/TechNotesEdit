@@ -93,6 +93,8 @@ const main = (async () => {
                 await update(ref(database), updates);
                 await set(ref(database, `technotes/user/${user.uid}`), null);
                 await set(ref(database, `technotes/data/${user.uid}`), null);
+                await deleteFileFromGitHub('TechNotesSitemap', `${user.uid}.xml`);
+                await deleteUserFromSitemapIndex(`https://notes.duckode.com/submodule/TechNotesSitemap/${user.uid}.xml`);
                 await set(ref(database, `github/allows/${user.uid}`), null);
                 await deleteUser(user);
                 location.reload();
@@ -1324,7 +1326,7 @@ const main = (async () => {
                 removeBtn.onclick = () => {
                     item.images.splice(i, 1);
                     renderImages();
-                    deleteFileFromGitHub(url.replace(`https://duckodes.github.io/TechNotesPicture/${auth.currentUser.uid}/`, ''));
+                    deleteFileFromGitHub('TechNotesPicture', url.replace(`https://duckodes.github.io/TechNotesPicture/`, ''));
                 };
 
                 const wrapper = document.createElement('div');
@@ -2228,7 +2230,7 @@ const main = (async () => {
             resetPasswordButton.style.width = '100%';
             resetPasswordButton.style.maxWidth = '250px';
             resetPasswordButton.addEventListener('click', () => {
-                resetPassword({ targetUID: inputTargetUID.value, newPassword: inputNewPassword.value});
+                resetPassword({ targetUID: inputTargetUID.value, newPassword: inputNewPassword.value });
             });
             resetPasswordContainer.appendChild(resetPasswordButton);
         }
@@ -2347,11 +2349,11 @@ const main = (async () => {
             return [];
         }
     }
-    async function deleteFileFromGitHub(fileName) {
+    async function deleteFileFromGitHub(repoName, fileName) {
         if (fileName === '') return;
 
-        const repo = 'duckodes/TechNotesPicture';
-        const path = `${auth.currentUser.uid}/${fileName}`;
+        const repo = 'duckodes/' + repoName;
+        const path = fileName;
         const tokenSnapshot = await get(ref(database, `github/token`));
         const token = tokenSnapshot.val();
         const apiUrl = `https://api.github.com/repos/${repo}/contents/${path}`;
@@ -2554,6 +2556,90 @@ const main = (async () => {
 
         const payload = {
             message: `delete <url> for ${locToDelete}`,
+            content: encodedContent,
+            branch: 'main',
+            sha
+        };
+
+        const response = await fetch(apiUrl, {
+            method: 'PUT',
+            headers: {
+                Authorization: `token ${token}`,
+                Accept: 'application/vnd.github.v3+json'
+            },
+            body: JSON.stringify(payload)
+        });
+
+        const result = await response.json();
+        if (response.ok) {
+            console.log(`已從 sitemap.xml 中刪除：${locToDelete}`);
+        } else {
+            console.error('刪除失敗:', result);
+        }
+    }
+    async function deleteUserFromSitemapIndex(locToDelete, path = 'sitemap.xml') {
+        const apiUrl = `https://api.github.com/repos/duckodes/TechNotesSitemap/contents/${path}`;
+
+        const tokenSnapshot = await get(ref(database, `github/token`));
+        const token = tokenSnapshot.val();
+
+        let sha = null;
+        let existingContent = '';
+
+        try {
+            const res = await fetch(apiUrl, {
+                headers: {
+                    Authorization: `token ${token}`,
+                    Accept: 'application/vnd.github.v3+json'
+                }
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                sha = data.sha;
+
+                function decodeBase64Utf8(base64) {
+                    const binary = atob(base64);
+                    const bytes = new Uint8Array([...binary].map(c => c.charCodeAt(0)));
+                    return new TextDecoder().decode(bytes);
+                }
+
+                existingContent = decodeBase64Utf8(data.content);
+            } else {
+                console.warn('sitemap.xml 不存在，無法刪除');
+                return;
+            }
+        } catch (err) {
+            console.error('無法讀取 sitemap.xml:', err);
+            return;
+        }
+
+        // 用正則找出包含該 <loc> 的整個 <sitemap> 區塊
+        const sitemapRegex = new RegExp(
+            `<sitemap>\\s*<loc>${locToDelete.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}</loc>[\\s\\S]*?<\\/sitemap>`,
+            'g'
+        );
+
+        const updatedContent = existingContent
+            .replace(sitemapRegex, '')
+            .replace(/^\s*[\r\n]/gm, '') // 移除空行
+            .trim();
+
+        if (updatedContent === existingContent) {
+            console.log(`sitemap.xml 中沒有找到 <loc>${locToDelete}</loc>，無需更新`);
+            return;
+        }
+
+        function encodeBase64Utf8(str) {
+            const utf8Bytes = new TextEncoder().encode(str);
+            const base64String = btoa(String.fromCharCode(...utf8Bytes));
+            return base64String;
+        }
+
+        const encodedContent = encodeBase64Utf8(updatedContent);
+
+        const payload = {
+            message: `delete <sitemap> for ${locToDelete}`,
             content: encodedContent,
             branch: 'main',
             sha
