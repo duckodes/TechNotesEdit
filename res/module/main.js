@@ -93,6 +93,7 @@ const main = (async () => {
                 await update(ref(database), updates);
                 await set(ref(database, `technotes/user/${user.uid}`), null);
                 await set(ref(database, `technotes/data/${user.uid}`), null);
+                await set(ref(database, `github/allows/${user.uid}`), null);
                 await deleteUser(user);
                 location.reload();
             });
@@ -210,6 +211,8 @@ const main = (async () => {
                         title: ''
                     })
                     title.textContent = '註冊成功';
+                    // set github token allow
+                    await set(ref(database, `github/allows/${user.uid}`), true);
                     await timer.delay(500);
 
                     location.reload();
@@ -2298,7 +2301,7 @@ const main = (async () => {
 
             const repo = 'duckodes/TechNotesPicture';
             const path = `${auth.currentUser.uid}/${file.name}`;
-            const tokenSnapshot = await get(ref(database, `github/${auth.currentUser.uid}/token`));
+            const tokenSnapshot = await get(ref(database, `github/token`));
             const token = tokenSnapshot.val();
 
             const response = await fetch(`https://api.github.com/repos/${repo}/contents/${path}`, {
@@ -2349,7 +2352,7 @@ const main = (async () => {
 
         const repo = 'duckodes/TechNotesPicture';
         const path = `${auth.currentUser.uid}/${fileName}`;
-        const tokenSnapshot = await get(ref(database, `github/${auth.currentUser.uid}/token`));
+        const tokenSnapshot = await get(ref(database, `github/token`));
         const token = tokenSnapshot.val();
         const apiUrl = `https://api.github.com/repos/${repo}/contents/${path}`;
 
@@ -2399,7 +2402,7 @@ const main = (async () => {
     async function pushSitemapToGitHub(fileToInsert, { path = 'sitemap.xml', includeCheck = 'urlset' }) {
         const apiUrl = `https://api.github.com/repos/duckodes/TechNotesSitemap/contents/${path}`;
 
-        const tokenSnapshot = await get(ref(database, `github/${auth.currentUser.uid}/token`));
+        const tokenSnapshot = await get(ref(database, `github/token`));
         const token = tokenSnapshot.val();
 
         let sha = null;
@@ -2497,7 +2500,7 @@ const main = (async () => {
     async function deleteUserFromSitemap(locToDelete, path = 'sitemap.xml') {
         const apiUrl = `https://api.github.com/repos/duckodes/TechNotesSitemap/contents/${path}`;
 
-        const tokenSnapshot = await get(ref(database, `github/${auth.currentUser.uid}/token`));
+        const tokenSnapshot = await get(ref(database, `github/token`));
         const token = tokenSnapshot.val();
 
         let sha = null;
