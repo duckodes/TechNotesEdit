@@ -22,6 +22,7 @@ const main = (async () => {
     const techNotes = await get(ref(database, `technotes/data/${auth.currentUser?.uid}`));
     const dbEditor = document.getElementById('dbEditor');
     const manualEditor = document.getElementById('manualEditor');
+    const tempEditor = document.getElementById('tempEditor');
     const addEntryBtn = document.getElementById('addEntryBtn');
     const sideBar = document.querySelector('.sidebar');
     const appElement = document.querySelector('.app');
@@ -29,6 +30,7 @@ const main = (async () => {
     const categoryList = document.getElementById('categoryList');
     const categoryAll = document.querySelector('.categoryAll');
     const addNewArticle = document.querySelector('.addNewArticle');
+    const tempArticle = document.querySelector('.tempArticle');
     const settings = document.querySelector('.settings');
     const manualEditorTitle = document.getElementById('manualEditorTitle');
     let data = !techNotes.val() ? {
@@ -121,6 +123,9 @@ const main = (async () => {
                         document.querySelector('.profile-container').style.display = '';
                         document.querySelector('.change-password-container').style.display = '';
                         document.querySelector('.delete-account-button').style.display = '';
+                        break;
+                    case 'tempEditor':
+                        tempEditor.style.display = '';
                         break;
                 }
             }
@@ -244,7 +249,7 @@ const main = (async () => {
         entry.className = 'entry';
 
         entry.innerHTML = `
-            <div class="date">分類: <select class="recategory" style="margin-right: 10px;"></select> 第${index}筆資料</div>
+            <div class="date">分類: <select class="recategory" style="margin-right: 10px;"></select> 第${index}筆資料 ${container !== dbEditor ? '<span class="status draft">草稿</span>' : '<span class="status published">已發佈</span>'}</div>
             <br>
             
             <label>標題</label>
@@ -358,7 +363,7 @@ const main = (async () => {
             <label>留言</label>
             <div class="comments-element"></div>
 
-            <button class="delete">刪除文章</button>
+            <button class="delete">${container !== tempEditor ? container !== manualEditor ? '刪除文章' : '刪除暫存文章' : '刪除草稿'}</button>
         `;
 
         window.addEventListener('message', (e) => {
@@ -436,7 +441,11 @@ const main = (async () => {
         if (isFromDB) {
             renderUploadBtn('更新', dataState.update);
         } else {
-            renderUploadBtn('上傳', dataState.upload);
+            if (container !== tempEditor) {
+                renderUploadBtn('上傳', dataState.upload);
+            } else {
+                renderUploadBtn('發佈草稿', dataState.upload);
+            }
         }
         function renderUploadBtn(btnTextContent, state) {
             const uploadSingleBtn = document.createElement('button');
@@ -542,6 +551,10 @@ const main = (async () => {
                         }
                         await setTags(tags);
 
+                        if (container === tempEditor) {
+                            await set(ref(database, `technotes/temp/${auth.currentUser.uid}/${category.replaceAll('/', '／')}`), null);
+                        }
+
                         // update main sitemap
                         const userId = auth.currentUser.uid;
                         const today = new Date().toISOString().split('T')[0]; // yyyy-mm-dd
@@ -565,6 +578,7 @@ const main = (async () => {
 
                         dbEditor.innerHTML = '';
                         manualEditor.innerHTML = '';
+                        tempEditor.innerHTML = '';
                         await updateData();
                         renderDBEditor();
                         renderManualEditor();
@@ -578,14 +592,25 @@ const main = (async () => {
         }
 
         container.appendChild(entry);
+        const titleInput = entry.querySelector('input[type="text"]');
+        titleInput.addEventListener('blur', () => {
+            saveInTemp();
+        });
+        const summaryTextarea = entry.querySelectorAll('textarea')[0];
+        summaryTextarea.addEventListener('blur', () => {
+            saveInTemp();
+        });
 
         const contentTextarea = entry.querySelectorAll('textarea')[1];
+        const imageInputs = entry.querySelectorAll('.imageInputs input');
+
         const contentTools = entry.querySelector('.content-tools');
         contentTextarea.addEventListener('blur', () => {
             contentTools.style.display = '';
 
             renderContentDisplay();
             contentTextarea.style.display = '';
+            saveInTemp();
         });
         contentTools.childNodes.forEach(tool => {
             tool.addEventListener('pointerdown', (e) => {
@@ -846,6 +871,9 @@ const main = (async () => {
         const entryDelete = entry.querySelector('.delete');
         entryDelete.onclick = async () => {
             if (confirm(`即將刪除資料\n類別: ${category}\n序列${index}\n\n標題: ${data[category][index].title}`)) {
+                if (container === tempEditor || container === manualEditor) {
+                    await set(ref(database, `technotes/temp/${auth.currentUser.uid}/${category.replaceAll('/', '／')}`), null);
+                }
                 async function deleteNote(category, index) {
                     const categoryRef = ref(database, `technotes/data/${auth.currentUser.uid}/${category}`);
                     const snapshot = await get(categoryRef);
@@ -857,6 +885,7 @@ const main = (async () => {
                 }
                 dbEditor.innerHTML = '';
                 manualEditor.innerHTML = '';
+                tempEditor.innerHTML = '';
                 await deleteNote(category, index);
 
                 const dataName = (await get(ref(database, `technotes/user/${auth.currentUser.uid}/name`))).val();
@@ -1381,6 +1410,7 @@ const main = (async () => {
                 suggestion.textContent = tag;
                 suggestion.onclick = () => {
                     tags.push(tag);
+                    saveInTemp();
                     renderTags();
                     tagInput.value = '';
                     suggestionsBox.innerHTML = '';
@@ -1399,6 +1429,7 @@ const main = (async () => {
 
                         dbEditor.innerHTML = '';
                         manualEditor.innerHTML = '';
+                        tempEditor.innerHTML = '';
                         await updateData();
                         renderDBEditor();
                         renderManualEditor();
@@ -1424,6 +1455,7 @@ const main = (async () => {
             }
             tagInput.value = '';
             suggestionsBox.innerHTML = '';
+            saveInTemp();
         }
 
         function renderTags() {
@@ -1438,6 +1470,7 @@ const main = (async () => {
                 removeBtn.onclick = () => {
                     tags.splice(tags.indexOf(tag), 1);
                     renderTags();
+                    saveInTemp();
                 };
 
                 tagEl.appendChild(removeBtn);
@@ -1491,6 +1524,9 @@ const main = (async () => {
 
         // #region 允許評論
         const allowCommentsInput = entry.querySelector('.allow-comments-input');
+        allowCommentsInput.addEventListener('change', () => {
+            saveInTemp();
+        });
         allowCommentsInput.checked = (await get(ref(database, `technotes/data/${auth.currentUser.uid}/${category.replaceAll('/', '／')}/${index}/allowcomments`))).val() || false;
 
         setupCommentsListener(entry, category, index);
@@ -1606,7 +1642,81 @@ const main = (async () => {
             });
         }
         //#endregion
+
+        async function saveInTemp() {
+            if (container === dbEditor) return;
+            data[category][index].title = titleInput.value;
+            data[category][index].summary = summaryTextarea.value;
+            data[category][index].content = contentTextarea.value;
+            data[category][index].images = Array.from(imageInputs).map(input => `https://duckodes.github.io/TechNotesPicture/${auth.currentUser.uid}/` + input.value);
+            data[category][index].tags = tags;
+            data[category][index].allowcomments = allowCommentsInput.checked;
+            await set(
+                ref(database, `technotes/temp/${auth.currentUser.uid}/${category.replaceAll('/', '／')}`),
+                data[category][index]
+            );
+            console.log('save temp');
+        }
     }
+
+
+
+
+
+
+    //#region 設定初始按鈕
+    const setMainPages = (key) => {
+        Array.from(mainElement.children).forEach((mainChild, index) => {
+            if (index === 0 || index === 3) return;
+            mainChild.style.display = 'none';
+        });
+        switch (key) {
+            case 'dbEditor':
+                dbEditor.style.display = '';
+                break;
+            case 'manualEditor':
+                manualEditor.style.display = '';
+                manualEditorTitle.style.display = '';
+                break;
+            case 'profileContainer':
+                document.querySelector('.profile-container').style.display = '';
+                document.querySelector('.change-password-container').style.display = '';
+                document.querySelector('.delete-account-button').style.display = '';
+                break;
+            case 'tempEditor':
+                tempEditor.style.display = '';
+                break;
+        }
+    }
+    addNewArticle.addEventListener('click', (e) => {
+        document.querySelectorAll('.sidebar li').forEach(li => li.classList.remove('active'));
+        e.target.classList.add('active');
+        setMainPages('manualEditor');
+    });
+    tempArticle.addEventListener('click', async (e) => {
+        tempEditor.innerHTML = '';
+        document.querySelectorAll('.sidebar li').forEach(li => li.classList.remove('active'));
+        e.target.classList.add('active');
+        setMainPages('tempEditor');
+        const tempData = (await get(ref(database, `technotes/temp/${auth.currentUser.uid}`))).val();
+
+        if (tempData) {
+            await updateData();
+            Object.entries(tempData).forEach(([category, items]) => {
+                if (!data[category]) {
+                    data[category] = [];
+                }
+                data[category].push(items);
+                createEntryUI(items, tempEditor, false, data[category].length - 1, category);
+            });
+        }
+    });
+    settings.addEventListener('click', (e) => {
+        document.querySelectorAll('.sidebar li').forEach(li => li.classList.remove('active'));
+        e.target.classList.add('active');
+        setMainPages('profileContainer');
+    });
+    //#endregion 
 
     const categoryManager = {
         items: [],
@@ -1640,18 +1750,11 @@ const main = (async () => {
                     document.querySelector('.change-password-container').style.display = '';
                     document.querySelector('.delete-account-button').style.display = '';
                     break;
+                case 'tempEditor':
+                    tempEditor.style.display = '';
+                    break;
             }
         }
-        addNewArticle.addEventListener('click', (e) => {
-            document.querySelectorAll('.sidebar li').forEach(li => li.classList.remove('active'));
-            e.target.classList.add('active');
-            setMainPages('manualEditor');
-        });
-        settings.addEventListener('click', (e) => {
-            document.querySelectorAll('.sidebar li').forEach(li => li.classList.remove('active'));
-            e.target.classList.add('active');
-            setMainPages('profileContainer');
-        });
 
         if (!data) return;
         const selectorContainer = document.createElement('h2');
@@ -1798,6 +1901,7 @@ const main = (async () => {
             totalItemsLength += items.length;
         });
         categoryAll.classList.add('tip-row');
+        categoryAll.querySelector('.tip-gray')?.remove();
         categoryAll.innerHTML += `<span class="tip-gray">${totalItemsLength}</span>`;
         categoryAll.addEventListener('click', (e) => {
             document.querySelectorAll('.sidebar li').forEach(li => li.classList.remove('active'));
@@ -2015,7 +2119,7 @@ const main = (async () => {
         container.className = 'profile-container';
 
         const title = document.createElement('h3');
-        title.innerHTML = '個人資訊 <a href="https://notes.duckode.com/?user=' + dataName + '" style="font-size: 12px;color: #000;" target="_blank">發布連結</a>';
+        title.innerHTML = '個人資訊 <a href="https://notes.duckode.com/?user=' + dataName + '" style="font-size: 12px;color: #000;" target="_blank">發佈連結</a>';
         container.appendChild(title);
 
         const status = document.createElement('p');
@@ -2126,45 +2230,45 @@ const main = (async () => {
 
         const inputTitle = document.createElement('input');
         inputTitle.type = 'text';
-        inputTitle.placeholder = `輸入職稱(${dataTitle || '尚未設定'})`;
+        inputTitle.placeholder = `輸入主簡介(${dataTitle || '尚未設定'})`;
         inputTitle.style.marginRight = "10px";
         container.appendChild(inputTitle);
         const buttonTitle = document.createElement('button');
-        buttonTitle.textContent = '更新職稱';
+        buttonTitle.textContent = '更新主簡介';
         container.appendChild(buttonTitle);
         buttonTitle.onclick = async () => {
             await isTokenValid();
-            if (!confirm('確定要更新職稱?')) return;
+            if (!confirm('確定要更新主簡介?')) return;
             try {
                 const titleRef = ref(database, `technotes/user/${auth.currentUser.uid}/title`);
                 await set(titleRef, inputTitle.value);
-                inputTitle.placeholder = `輸入新職稱(${(await get(titleRef)).val()})`;
+                inputTitle.placeholder = `輸入主簡介(${(await get(titleRef)).val()})`;
                 inputTitle.value = '';
-                status.textContent = '已更新職稱';
+                status.textContent = '已更新主簡介';
             } catch (e) {
-                status.textContent = `更新職稱失敗: ${e}`;
+                status.textContent = `更新主簡介失敗: ${e}`;
             }
         };
 
         const inputEmployed = document.createElement('input');
         inputEmployed.type = 'text';
-        inputEmployed.placeholder = `輸入職位資訊(${dataEmployed || '尚未設定'})`;
+        inputEmployed.placeholder = `輸入副簡介(${dataEmployed || '尚未設定'})`;
         inputEmployed.style.marginRight = "10px";
         container.appendChild(inputEmployed);
         const buttonEmployed = document.createElement('button');
-        buttonEmployed.textContent = '更新職位資訊';
+        buttonEmployed.textContent = '更新副簡介';
         container.appendChild(buttonEmployed);
         buttonEmployed.onclick = async () => {
             await isTokenValid();
-            if (!confirm('確定要更新職位資訊?')) return;
+            if (!confirm('確定要更新副簡介?')) return;
             try {
                 const employedRef = ref(database, `technotes/user/${auth.currentUser.uid}/employed`);
                 await set(employedRef, inputEmployed.value);
-                inputEmployed.placeholder = `輸入新職位(${(await get(employedRef)).val()})`;
+                inputEmployed.placeholder = `輸入副簡介(${(await get(employedRef)).val()})`;
                 inputEmployed.value = '';
-                status.textContent = '已更新職位';
+                status.textContent = '已更新副簡介';
             } catch (e) {
-                status.textContent = `更新職位失敗: ${e}`;
+                status.textContent = `更新副簡介失敗: ${e}`;
             }
         };
 

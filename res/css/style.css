@@ -78,6 +78,23 @@ img {
     color: #666;
 }
 
+.status {
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    color: white;
+    user-select: none;
+    -moz-user-select: none;
+}
+
+.status.draft {
+    background-color: #ffa502;
+}
+
+.status.published {
+    background-color: #2ed573;
+}
+
 .login-container {
     width: 100%;
     max-width: fit-content;
