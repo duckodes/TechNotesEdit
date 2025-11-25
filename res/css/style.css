@@ -384,6 +384,10 @@ img {
     border-radius: 100%;
 }
 
+#suggestionsContainer {
+    position: relative;
+}
+
 #suggestions {
     margin-top: 5px;
     border: 1px solid #ccc;

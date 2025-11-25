@@ -347,7 +347,9 @@ const main = (async () => {
                 <input type="text" class="tagInput" placeholder="輸入標籤後按 Enter">
                 <button id="tagAdd">新增標籤</button>
             </div>
-            <div id="suggestions"></div>
+            <div id="suggestionsContainer">
+                <div id="suggestions"></div>
+            </div>
             <div id="tagList"></div>
 
             <div class="content-preview">
@@ -1728,6 +1730,7 @@ const main = (async () => {
             this.items.length = 0;
         }
     };
+    let lastCategory;
     function renderDBEditor() {
         dbEditor.innerHTML = '';
         categoryManager.clear();
@@ -1759,118 +1762,133 @@ const main = (async () => {
         if (!data) return;
         const selectorContainer = document.createElement('h2');
         selectorContainer.textContent = '篩選: ';
-        dbEditor.appendChild(selectorContainer);
         const categorySelector = document.createElement('select');
-        selectorContainer.appendChild(categorySelector);
         const tagsSelector = document.createElement('select');
-        selectorContainer.appendChild(tagsSelector);
-
-        const allCategoryOption = document.createElement('option');
-        allCategoryOption.textContent = '全部分類';
-        categorySelector.appendChild(allCategoryOption);
-        const allTagsOption = document.createElement('option');
-        allTagsOption.textContent = '全部標籤';
-        tagsSelector.appendChild(allTagsOption);
-
-        categorySelector.addEventListener('change', () => {
-            dbEditor.innerHTML = '';
+        if (!lastCategory) {
             dbEditor.appendChild(selectorContainer);
-            Object.entries(data).forEach(async ([category, items]) => {
-                const taggedItems = await Promise.all(
-                    items.map(async (item, index) => {
-                        const snapshot = await get(ref(database, `technotes/data/${auth.currentUser.uid}/${category}/${index}/tags`));
-                        const tags = snapshot.val() || [];
-                        return { item, index, tags };
-                    })
-                );
+            selectorContainer.appendChild(categorySelector);
+            selectorContainer.appendChild(tagsSelector);
+            const allCategoryOption = document.createElement('option');
+            allCategoryOption.textContent = '全部分類';
+            categorySelector.appendChild(allCategoryOption);
+            const allTagsOption = document.createElement('option');
+            allTagsOption.textContent = '全部標籤';
+            tagsSelector.appendChild(allTagsOption);
 
-                const filteredItems = taggedItems.filter(entry =>
-                    Array.isArray(entry.tags) && entry.tags.includes(tagsSelector.value)
-                );
+            categorySelector.addEventListener('change', () => {
+                dbEditor.innerHTML = '';
+                dbEditor.appendChild(selectorContainer);
+                Object.entries(data).forEach(async ([category, items]) => {
+                    const taggedItems = await Promise.all(
+                        items.map(async (item, index) => {
+                            const snapshot = await get(ref(database, `technotes/data/${auth.currentUser.uid}/${category}/${index}/tags`));
+                            const tags = snapshot.val() || [];
+                            return { item, index, tags };
+                        })
+                    );
 
-                if (filteredItems.length > 0) {
-                    if (categorySelector.value !== category && categorySelector.value !== '全部分類') return;
+                    const filteredItems = taggedItems.filter(entry =>
+                        Array.isArray(entry.tags) && entry.tags.includes(tagsSelector.value)
+                    );
 
-                    const categoryTitle = document.createElement('h3');
-                    categoryTitle.textContent = `主要分類：${category}`;
-                    dbEditor.appendChild(categoryTitle);
+                    if (filteredItems.length > 0) {
+                        if (categorySelector.value !== category && categorySelector.value !== '全部分類') return;
 
-                    filteredItems.forEach(({ item, index }) => {
-                        createEntryUI(item, dbEditor, true, index, category);
-                    });
-                } else if (tagsSelector.value.includes('全部標籤')) {
-                    if (categorySelector.value !== category && categorySelector.value !== '全部分類') return;
+                        const categoryTitle = document.createElement('h3');
+                        categoryTitle.textContent = `主要分類：${category}`;
+                        dbEditor.appendChild(categoryTitle);
 
-                    const categoryTitle = document.createElement('h3');
-                    categoryTitle.textContent = `主要分類：${category}`;
-                    dbEditor.appendChild(categoryTitle);
-                    items.forEach((item, index) => {
-                        createEntryUI(item, dbEditor, true, index, category);
-                    });
-                }
+                        filteredItems.forEach(({ item, index }) => {
+                            createEntryUI(item, dbEditor, true, index, category);
+                        });
+                    } else if (tagsSelector.value.includes('全部標籤')) {
+                        if (categorySelector.value !== category && categorySelector.value !== '全部分類') return;
+
+                        const categoryTitle = document.createElement('h3');
+                        categoryTitle.textContent = `主要分類：${category}`;
+                        dbEditor.appendChild(categoryTitle);
+                        items.forEach((item, index) => {
+                            createEntryUI(item, dbEditor, true, index, category);
+                        });
+                    }
+                });
             });
-        });
-        tagsSelector.addEventListener('change', () => {
-            dbEditor.innerHTML = '';
-            dbEditor.appendChild(selectorContainer);
-            Object.entries(data).forEach(async ([category, items]) => {
-                const taggedItems = await Promise.all(
-                    items.map(async (item, index) => {
-                        const snapshot = await get(ref(database, `technotes/data/${auth.currentUser.uid}/${category}/${index}/tags`));
-                        const tags = snapshot.val() || [];
-                        return { item, index, tags };
-                    })
-                );
+            tagsSelector.addEventListener('change', () => {
+                dbEditor.innerHTML = '';
+                dbEditor.appendChild(selectorContainer);
+                Object.entries(data).forEach(async ([category, items]) => {
+                    const taggedItems = await Promise.all(
+                        items.map(async (item, index) => {
+                            const snapshot = await get(ref(database, `technotes/data/${auth.currentUser.uid}/${category}/${index}/tags`));
+                            const tags = snapshot.val() || [];
+                            return { item, index, tags };
+                        })
+                    );
 
-                const filteredItems = taggedItems.filter(entry =>
-                    Array.isArray(entry.tags) && entry.tags.includes(tagsSelector.value)
-                );
+                    const filteredItems = taggedItems.filter(entry =>
+                        Array.isArray(entry.tags) && entry.tags.includes(tagsSelector.value)
+                    );
 
-                if (filteredItems.length > 0) {
-                    if (categorySelector.value !== category && categorySelector.value !== '全部分類') return;
+                    if (filteredItems.length > 0) {
+                        if (categorySelector.value !== category && categorySelector.value !== '全部分類') return;
 
-                    const categoryTitle = document.createElement('h3');
-                    categoryTitle.textContent = `主要分類：${category}`;
-                    dbEditor.appendChild(categoryTitle);
+                        const categoryTitle = document.createElement('h3');
+                        categoryTitle.textContent = `主要分類：${category}`;
+                        dbEditor.appendChild(categoryTitle);
 
-                    filteredItems.forEach(({ item, index }) => {
-                        createEntryUI(item, dbEditor, true, index, category);
-                    });
-                } else if (tagsSelector.value.includes('全部標籤')) {
-                    if (categorySelector.value !== category && categorySelector.value !== '全部分類') return;
+                        filteredItems.forEach(({ item, index }) => {
+                            createEntryUI(item, dbEditor, true, index, category);
+                        });
+                    } else if (tagsSelector.value.includes('全部標籤')) {
+                        if (categorySelector.value !== category && categorySelector.value !== '全部分類') return;
 
-                    const categoryTitle = document.createElement('h3');
-                    categoryTitle.textContent = `主要分類：${category}`;
-                    dbEditor.appendChild(categoryTitle);
-                    items.forEach((item, index) => {
-                        createEntryUI(item, dbEditor, true, index, category);
-                    });
-                }
+                        const categoryTitle = document.createElement('h3');
+                        categoryTitle.textContent = `主要分類：${category}`;
+                        dbEditor.appendChild(categoryTitle);
+                        items.forEach((item, index) => {
+                            createEntryUI(item, dbEditor, true, index, category);
+                        });
+                    }
+                });
             });
-        });
+        }
         const addedTags = new Set();
         let totalItemsLength = 0;
         Object.entries(data).forEach(([category, items]) => {
-            const categoryOption = document.createElement('option');
-            categoryOption.textContent = category;
-            categorySelector.appendChild(categoryOption);
+            // default
+            if (lastCategory) {
+                if (lastCategory === category) {
+                    const categoryTitle = document.createElement('h3');
+                    categoryTitle.textContent = `主要分類：${category}`;
+                    dbEditor.appendChild(categoryTitle);
+                    
+                    items.forEach((item, index) => {
+                        createEntryUI(item, dbEditor, true, index, lastCategory);
+                    });
+                    setMainPages('dbEditor');
+                }
+            } else {
+                const categoryOption = document.createElement('option');
+                categoryOption.textContent = category;
+                categorySelector.appendChild(categoryOption);
 
-            const categoryTitle = document.createElement('h3');
-            categoryTitle.textContent = `主要分類：${category}`;
-            dbEditor.appendChild(categoryTitle);
+                const categoryTitle = document.createElement('h3');
+                categoryTitle.textContent = `主要分類：${category}`;
+                dbEditor.appendChild(categoryTitle);
 
-            items.forEach((item, index) => {
-                item.tags?.forEach(tag => {
-                    if (!addedTags.has(tag)) {
-                        addedTags.add(tag);
-                        const tagsOption = document.createElement('option');
-                        tagsOption.textContent = tag;
-                        tagsSelector.appendChild(tagsOption);
-                    }
+                items.forEach((item, index) => {
+                    item.tags?.forEach(tag => {
+                        if (!addedTags.has(tag)) {
+                            addedTags.add(tag);
+                            const tagsOption = document.createElement('option');
+                            tagsOption.textContent = tag;
+                            tagsSelector.appendChild(tagsOption);
+                        }
+                    });
+
+                    // createEntryUI(item, dbEditor, true, index, category);
                 });
-
-                // createEntryUI(item, dbEditor, true, index, category);
-            });
+            }
 
             const categoryListItem = document.createElement('li');
             categoryManager.add(categoryListItem);
@@ -1881,6 +1899,7 @@ const main = (async () => {
                 e.target.classList.add('active');
                 dbEditor.innerHTML = '';
                 if (e.target.dataset.category !== category) return;
+                lastCategory = category;
 
                 const categoryTitle = document.createElement('h3');
                 categoryTitle.textContent = `主要分類：${category}`;
@@ -1890,7 +1909,6 @@ const main = (async () => {
                 });
                 setMainPages('dbEditor');
             });
-
             categoryList.appendChild(categoryListItem);
 
             document.querySelectorAll('.sidebar li').forEach(li => {
