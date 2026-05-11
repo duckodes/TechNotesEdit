@@ -8,6 +8,15 @@ import timer from "./timer.js";
 import dagreUtils from "./dagre.utils.js";
 
 const main = (async () => {
+    const mainTopic = document.createElement('h1');
+    mainTopic.className = 'main-topic';
+    mainTopic.textContent = 'Tech Notes';
+    const subTopic = document.createElement('span');
+    subTopic.className = 'sub-topic';
+    subTopic.textContent = ' Join us';
+    mainTopic.appendChild(subTopic);
+    document.body.insertBefore(mainTopic, document.body.firstChild);
+
     function setRealHeight() {
         document.documentElement.style.setProperty('--vh', window.innerHeight * 0.01 + 'px');
     }
@@ -58,8 +67,10 @@ const main = (async () => {
 
     onAuthStateChanged(auth, async (user) => {
         if (!user) {
+            mainTopic.style.display = '';
             createLogin();
         } else {
+            mainTopic.style.display = 'none';
             if (isCreateAccount) return;
             userName = (await get(ref(database, `technotes/user/${auth.currentUser.uid}/name`))).val();
             await updateData();
@@ -137,6 +148,7 @@ const main = (async () => {
         timer.textContent = new Date(Date.parse((await user.getIdTokenResult()).expirationTime)).toLocaleString() + ' 過期';
         mainElement.insertBefore(timer, mainElement.children[3]);
     }
+
     function createLogin() {
         const container = document.createElement('div');
         container.className = 'login-container';
