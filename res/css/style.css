@@ -170,6 +170,30 @@ img {
     color: #333;
 }
 
+.sign-google {
+    cursor: pointer;
+    background: rgb(100, 155, 255);
+    font-family: 'Arial Narrow', Arial, sans-serif;
+    font-size: smaller;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #fff7;
+    border-radius: 4px;
+    margin-top: 10px;
+    transition: background-color 200ms ease, color 200ms ease;
+}
+
+.sign-google:hover {
+    color: #465a85;
+    background: rgb(146, 184, 255);
+}
+
+.sign-google:active {
+    border: 1px solid #fff5;
+}
+
 .content-display {
     display: block;
     flex-direction: column;

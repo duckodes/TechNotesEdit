@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
 import { getAuth, onAuthStateChanged, deleteUser } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js";
-import { signInWithEmailAndPassword, signOut, createUserWithEmailAndPassword, updatePassword, updateProfile } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js";
+import { signInWithEmailAndPassword, signOut, createUserWithEmailAndPassword, updatePassword, updateProfile, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js";
 import { getDatabase, ref, get, set, update, onValue, off, push } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-database.js";
 import fetcher from "./fetcher.js";
 import textareaUtils from "./textarea.utils.js";
@@ -26,6 +26,7 @@ const main = (async () => {
     const firebaseConfig = await fetcher.load('../res/config/firebaseConfig.json');
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
+    const provider = new GoogleAuthProvider();
     const database = getDatabase(app);
 
     const techNotes = await get(ref(database, `technotes/data/${auth.currentUser?.uid}`));
@@ -64,6 +65,52 @@ const main = (async () => {
 
     let userName;
     let isCreateAccount = false;
+
+    const userSignInGoogle = async () => {
+        signInWithPopup(auth, provider)
+            .then(async (result) => {
+                // This gives you a Google Access Token. You can use it to access the Google API.
+                const credential = GoogleAuthProvider.credentialFromResult(result);
+                const token = credential.accessToken;
+                // The signed-in user info.
+                const user = result.user;
+                // IdP data available using getAdditionalUserInfo(result)
+                if (user) {
+                    const displayName = user.email.replace(/@.*?(?=@|$)/g, '');
+                    const isCreateAccount = !(await get(ref(database, `technotes/user/${user.uid}`))).val();
+                    if (isCreateAccount) {
+                        await updateProfile(user, { displayName: displayName });
+
+                        // check
+                        await set(ref(database, `technotes/check/${displayName}`), user.uid);
+                        // profile
+                        await set(ref(database, `technotes/user/${user.uid}`), {
+                            email: user.email,
+                            employed: '',
+                            github: '',
+                            image: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8z8AABAAChQF3nAAAAABJRU5ErkJggg==',
+                            name: displayName,
+                            theme: 'default',
+                            title: ''
+                        })
+                        // set github token allow
+                        await set(ref(database, `github/allows/${user.uid}`), true);
+                        await timer.delay(200);
+                    }
+
+                    location.reload();
+                }
+                // ...
+            }).catch((error) => {
+                // Handle Errors here.
+                const errorCode = error.code;
+                const errorMessage = error.message;
+                console.error(errorMessage);
+                // The AuthCredential type that was used.
+                const credential = GoogleAuthProvider.credentialFromError(error);
+                // ...
+            });
+    }
 
     onAuthStateChanged(auth, async (user) => {
         if (!user) {
@@ -254,6 +301,62 @@ const main = (async () => {
         });
 
         appElement.appendChild(container);
+
+        // Sign in with Google
+        const signInGoogleButton = document.createElement('div');
+        signInGoogleButton.className = 'sign-google';
+        signInGoogleButton.innerHTML =
+            `<svg width="46" height="46" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+            <defs>
+              <rect id="b" x="0" y="0" width="40" height="40" rx="2"></rect>
+              <rect id="c" x="5" y="5" width="38" height="38" rx="1"></rect>
+              <filter x="-50%" y="-50%" width="200%" height="200%" filterUnits="objectBoundingBox" id="a">
+                <feOffset dy="1" in="SourceAlpha" result="shadowOffsetOuter1"></feOffset>
+                <feGaussianBlur stdDeviation="0.5" in="shadowOffsetOuter1" result="shadowBlurOuter1"></feGaussianBlur>
+                <feColorMatrix values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.168 0" in="shadowBlurOuter1"
+                  result="shadowMatrixOuter1"></feColorMatrix>
+                <feOffset in="SourceAlpha" result="shadowOffsetOuter2"></feOffset>
+                <feGaussianBlur stdDeviation="0.5" in="shadowOffsetOuter2" result="shadowBlurOuter2"></feGaussianBlur>
+                <feColorMatrix values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.084 0" in="shadowBlurOuter2"
+                  result="shadowMatrixOuter2"></feColorMatrix>
+                <feMerge>
+                  <feMergeNode in="shadowMatrixOuter1"></feMergeNode>
+                  <feMergeNode in="shadowMatrixOuter2"></feMergeNode>
+                  <feMergeNode in="SourceGraphic"></feMergeNode>
+                </feMerge>
+              </filter>
+            </defs>
+            <g fill="none" fill-rule="evenodd">
+              <g transform="translate(3 3)" filter="url(#a)">
+                <use fill="#4285F4" xlink:href="#b"></use>
+                <use xlink:href="#b"></use>
+                <use xlink:href="#b"></use>
+                <use xlink:href="#b"></use>
+              </g>
+              <g transform="translate(-1 -1)">
+                <use fill="#FFF" xlink:href="#c"></use>
+                <use xlink:href="#c"></use>
+                <use xlink:href="#c"></use>
+                <use xlink:href="#c"></use>
+              </g>
+              <path
+                d="M31.64 23.205c0-.639-.057-1.252-.164-1.841H23v3.481h4.844a4.14 4.14 0 01-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"
+                fill="#4285F4"></path>
+              <path
+                d="M23 32c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711h-3.007v2.332A8.997 8.997 0 0023 32z"
+                fill="#34A853"></path>
+              <path
+                d="M17.964 24.71a5.41 5.41 0 01-.282-1.71c0-.593.102-1.17.282-1.71v-2.332h-3.007A8.996 8.996 0 0014 23c0 1.452.348 2.827.957 4.042l3.007-2.332z"
+                fill="#FBBC05"></path>
+              <path
+                d="M23 17.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C27.463 14.891 25.426 14 23 14a8.997 8.997 0 00-8.043 4.958l3.007 2.332c.708-2.127 2.692-3.71 5.036-3.71z"
+                fill="#EA4335"></path>
+              <path d="M14 14h18v18H14V14z"></path>
+            </g>
+          </svg>
+          &emsp;Sign in with google`;
+        signInGoogleButton.addEventListener("click", userSignInGoogle);
+        container.appendChild(signInGoogleButton);
     }
 
     async function createEntryUI(item, container, isFromDB = false, index = null, category = null) {
