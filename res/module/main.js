@@ -8,6 +8,7 @@ import timer from "./timer.js";
 import dagreUtils from "./dagre.utils.js";
 
 const main = (async () => {
+    const domain = "https://noteest.com/note"
     const mainTopic = document.createElement('h1');
     mainTopic.className = 'main-topic';
     mainTopic.textContent = 'Tech Notes';
@@ -50,8 +51,8 @@ const main = (async () => {
             //     summary: '總結',
             //     content: '內容',
             //     images: [
-            //         'https://www.duckode.com/img/duck/duck_192x_144p.png',
-            //         'https://www.duckode.com/img/duck/duck_500x_144p.png'
+            //         'https://www.noteest.com/img/duck/duck_192x_144p.png',
+            //         'https://www.noteest.com/img/duck/duck_500x_144p.png'
             //     ],
             //     date: Date.now()
             // }
@@ -154,7 +155,7 @@ const main = (async () => {
                 await set(ref(database, `technotes/user/${user.uid}`), null);
                 await set(ref(database, `technotes/data/${user.uid}`), null);
                 await deleteFileFromGitHub('TechNotesSitemap', `${user.uid}.xml`);
-                await deleteUserFromSitemapIndex(`https://notes.duckode.com/submodule/TechNotesSitemap/${user.uid}.xml`);
+                await deleteUserFromSitemapIndex(`${domain}/submodule/TechNotesSitemap/${user.uid}.xml`);
                 await set(ref(database, `github/allows/${user.uid}`), null);
                 await deleteUser(user);
                 location.reload();
@@ -471,7 +472,7 @@ const main = (async () => {
                 <label>內容檢視</label>
                 <input type="checkbox" class="content-input-preview"/>
             </div>
-            ${!isFromDB ? '' : `<iframe class="preview-page" src="" width="100%" height="600px" style="border:none;" data-src="https://notes.duckode.com/?user=${userName}&category=${category}&categoryID=${index}"></iframe>`}
+            ${!isFromDB ? '' : `<iframe class="preview-page" src="" width="100%" height="600px" style="border:none;" data-src="${domain}/?user=${userName}&category=${category}&categoryID=${index}"></iframe>`}
             
             <div class="allow-comments">
                 <label>允許留言</label>
@@ -678,7 +679,7 @@ const main = (async () => {
 
                         const fileToInsert =
                             `    <sitemap>
-        <loc>https://notes.duckode.com/submodule/TechNotesSitemap/${userId}.xml</loc>
+        <loc>${domain}/submodule/TechNotesSitemap/${userId}.xml</loc>
         <lastmod>${today}</lastmod>
     </sitemap>`;
                         await pushSitemapToGitHub(fileToInsert, {
@@ -687,7 +688,7 @@ const main = (async () => {
                         const dataName = (await get(ref(database, `technotes/user/${auth.currentUser.uid}/name`))).val();
                         await pushSitemapToGitHub(
                             `    <url>
-        <loc>https://notes.duckode.com/?user=${dataName}&amp;category=${category.replaceAll('/', '／')}&amp;categoryID=${index}</loc>
+        <loc>${domain}/?user=${dataName}&amp;category=${category.replaceAll('/', '／')}&amp;categoryID=${index}</loc>
         <lastmod>${today}</lastmod>
     </url>`, {
                             path: `${userId}.xml`
@@ -1012,7 +1013,7 @@ const main = (async () => {
                 await deleteNote(category, index);
 
                 const dataName = (await get(ref(database, `technotes/user/${auth.currentUser.uid}/name`))).val();
-                await deleteUserFromSitemap(`https://notes.duckode.com/?user=${dataName}&amp;category=${category.replaceAll('/', '／')}&amp;categoryID=${index}`, `${auth.currentUser.uid}.xml`);
+                await deleteUserFromSitemap(`${domain}/?user=${dataName}&amp;category=${category.replaceAll('/', '／')}&amp;categoryID=${index}`, `${auth.currentUser.uid}.xml`);
                 await updateData();
                 renderDBEditor();
                 renderManualEditor();
@@ -2258,7 +2259,7 @@ const main = (async () => {
         container.className = 'profile-container';
 
         const title = document.createElement('h3');
-        title.innerHTML = '個人資訊 <a href="https://notes.duckode.com/?user=' + dataName + '" style="font-size: 12px;color: #000;" target="_blank">發佈連結</a>';
+        title.innerHTML = `個人資訊 <a href="${domain}/?user=${dataName}" style="font-size: 12px;color: #000;" target="_blank">發佈連結</a>`;
         container.appendChild(title);
 
         const status = document.createElement('p');
@@ -2330,7 +2331,7 @@ const main = (async () => {
 
         const selectTheme = document.createElement('select');
         selectTheme.style.marginRight = '10px';
-        const themes = await fetcher.load('https://notes.duckode.com/res/config/themes.json');
+        const themes = await fetcher.load(`${domain}/res/config/themes.json`);
         if (themes) {
             Object.values(themes).forEach(theme => {
                 const option = document.createElement('option');
