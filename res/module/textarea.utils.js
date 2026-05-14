@@ -1,8 +1,10 @@
 const textareaUtils = (() => {
-    function autoResizeTextarea(textarea) {
+    function autoResizeTextarea(mainElement, textarea) {
         const adjustHeight = () => {
+            const prevScrollTop = mainElement.scrollTop;
             textarea.style.height = "auto";
             textarea.style.height = textarea.scrollHeight + "px";
+            mainElement.scrollTop = prevScrollTop;
         };
 
         adjustHeight();

@@ -743,11 +743,13 @@ const main = (async () => {
             contentDisplay.style.display = '';
         }
         contentDisplay.addEventListener('pointerdown', (e) => {
+            const prevScrollTop = mainElement.scrollTop;
             contentDisplay.style.display = 'none';
             contentTextarea.style.display = 'flex';
             contentTools.style.display = 'flex';
             setTimeout(() => {
                 contentTextarea.focus();
+                mainElement.scrollTop = prevScrollTop;
             }, 0);
         });
         function convertSyntaxToHTML(element) {
@@ -985,7 +987,9 @@ const main = (async () => {
         }
 
         const entryTextareas = entry.querySelectorAll("textarea");
-        entryTextareas.forEach(textareaUtils.autoResizeTextarea);
+        entryTextareas.forEach(textarea => {
+            textareaUtils.autoResizeTextarea(mainElement, textarea);
+        });
 
         const entryDelete = entry.querySelector('.delete');
         entryDelete.onclick = async () => {
