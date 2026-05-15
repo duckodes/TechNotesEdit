@@ -8,10 +8,10 @@ import timer from "./timer.js";
 import dagreUtils from "./dagre.utils.js";
 
 const main = (async () => {
-    const domain = "https://noteest.com/note"
+    const domain = "https://www.noteest.com/note"
     const mainTopic = document.createElement('h1');
     mainTopic.className = 'main-topic';
-    mainTopic.textContent = 'Tech Notes';
+    mainTopic.textContent = 'Noteest Console';
     const subTopic = document.createElement('span');
     subTopic.className = 'sub-topic';
     subTopic.textContent = ' Join us';
