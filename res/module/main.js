@@ -9,14 +9,7 @@ import dagreUtils from "./dagre.utils.js";
 
 const main = (async () => {
     const domain = "https://www.noteest.com/note"
-    const mainTopic = document.createElement('h1');
-    mainTopic.className = 'main-topic';
-    mainTopic.textContent = 'Noteest Console';
-    const subTopic = document.createElement('span');
-    subTopic.className = 'sub-topic';
-    subTopic.textContent = ' Join us';
-    mainTopic.appendChild(subTopic);
-    document.body.insertBefore(mainTopic, document.body.firstChild);
+    const domainOrigin = "https://www.noteest.com/"
 
     function setRealHeight() {
         document.documentElement.style.setProperty('--vh', window.innerHeight * 0.01 + 'px');
@@ -115,10 +108,8 @@ const main = (async () => {
 
     onAuthStateChanged(auth, async (user) => {
         if (!user) {
-            mainTopic.style.display = '';
             createLogin();
         } else {
-            mainTopic.style.display = 'none';
             if (isCreateAccount) return;
             userName = (await get(ref(database, `technotes/user/${auth.currentUser.uid}/name`))).val();
             await updateData();
@@ -201,27 +192,48 @@ const main = (async () => {
         const container = document.createElement('div');
         container.className = 'login-container';
 
+        const mainTopic = document.createElement('h1');
+        mainTopic.className = 'main-topic';
+        mainTopic.textContent = 'Noteest';
+        mainTopic.addEventListener('click', () => {
+            const linkTo = document.createElement('a');
+            linkTo.href = domainOrigin;
+            linkTo.click();
+        });
+        const subTopic = document.createElement('span');
+        subTopic.className = 'sub-topic';
+        subTopic.textContent = ' Join us';
+        mainTopic.appendChild(subTopic);
+        const ugsoftLogo = document.createElement('div');
+        ugsoftLogo.className = 'ugsoft-logo';
+        mainTopic.appendChild(ugsoftLogo);
+        container.appendChild(mainTopic);
+
+        const loginPanel = document.createElement('div');
+        loginPanel.className = 'login-panel';
+        container.appendChild(loginPanel);
+
         const title = document.createElement('h3');
         title.textContent = '登入';
-        container.appendChild(title);
+        loginPanel.appendChild(title);
 
         const usernameLabel = document.createElement('label');
         usernameLabel.textContent = '帳號';
-        container.appendChild(usernameLabel);
+        loginPanel.appendChild(usernameLabel);
 
         const usernameInput = document.createElement('input');
         usernameInput.type = 'text';
         usernameInput.placeholder = '輸入帳號';
-        container.appendChild(usernameInput);
+        loginPanel.appendChild(usernameInput);
 
         const passwordLabel = document.createElement('label');
         passwordLabel.textContent = '密碼';
-        container.appendChild(passwordLabel);
+        loginPanel.appendChild(passwordLabel);
 
         const passwordInput = document.createElement('input');
         passwordInput.type = 'password';
         passwordInput.placeholder = '輸入密碼';
-        container.appendChild(passwordInput);
+        loginPanel.appendChild(passwordInput);
 
         const loginStatus = document.createElement('div');
         loginStatus.className = 'login-status';
@@ -239,8 +251,8 @@ const main = (async () => {
                 button.textContent = '註冊';
             }
         };
-        container.appendChild(loginStatus);
-        container.appendChild(button);
+        loginPanel.appendChild(loginStatus);
+        loginPanel.appendChild(button);
 
         button.onclick = async () => {
             const email = usernameInput.value;
@@ -357,7 +369,7 @@ const main = (async () => {
           </svg>
           &emsp;Sign in with google`;
         signInGoogleButton.addEventListener("click", userSignInGoogle);
-        container.appendChild(signInGoogleButton);
+        loginPanel.appendChild(signInGoogleButton);
     }
 
     async function createEntryUI(item, container, isFromDB = false, index = null, category = null) {
