@@ -260,7 +260,7 @@ img {
 
 .content-tools {
     position: sticky;
-    top: 0px;
+    top: 100px;
     display: none;
     justify-content: flex-end;
     flex-wrap: wrap;
@@ -297,9 +297,11 @@ img {
     margin-bottom: 1em;
     background: #fff;
     position: relative;
+    margin: 10px;
 }
 
 .profile-container {
+    margin: 10px;
     border: 1px solid #ccc;
     padding: 1em;
     background: #fff;
@@ -329,6 +331,7 @@ img {
 
 .change-password-container {
     border: 1px solid #ccc;
+    margin: 10px;
     padding: 1em;
     margin-bottom: 1em;
     background: #fff;
@@ -511,6 +514,136 @@ img {
     margin-right: 10px;
 }
 
+.timer-expire {
+    text-align: end;
+    color: #ffffff50;
+    font-size: smaller;
+}
+
+.main {
+    flex: 1;
+    overflow-y: auto;
+    display: none;
+}
+
+.tip-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.tip-gray {
+    padding-left: 25px;
+    color: #ccc5;
+    text-align: end;
+}
+
+.main-title {
+    position: sticky;
+    top: 0px;
+    background-color: #f9f9f9;
+    margin: 0px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    z-index: 11;
+}
+
+#dbEditor {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+#dbEditor .entry {
+    width: 90%;
+}
+
+#dbEditor:has(.tab) {
+    display: flex;
+    flex-wrap: wrap;
+    flex-direction: row;
+}
+
+/*Tabs*/
+.tab {
+    width: 250px;
+    height: 250px;
+    margin: 10px;
+    padding: 15px;
+    border: 1px solid #ccc;
+    cursor: pointer;
+    margin-right: 5px;
+    overflow: hidden;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+}
+
+.tab.max-width {
+    width: 100%;
+}
+
+.tab-title {
+    font-size: 25px;
+    font-weight: bold;
+    word-break: break-all;
+}
+
+.tab-summary {
+    font-size: 16px;
+    display: -webkit-box;
+    line-clamp: 2;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.tab-back-button {
+    margin-left: auto;
+}
+
+.tab-bottom {
+    margin-top: auto;
+    display: flex;
+    align-items: end;
+    justify-content: end;
+    flex-wrap: wrap;
+}
+
+.tab-likes {
+    font-size: 20px;
+    color: #909090;
+    margin-right: auto;
+}
+
+.tab-likes span {
+    font-size: 15px;
+    color: #ec9292;
+    font-weight: bolder;
+}
+
+.tab-comment-count {
+    font-size: 20px;
+    color: #909090;
+    margin: auto;
+}
+
+.tab-comment-count span {
+    font-size: 13px;
+}
+
+.tab-date {
+    font-size: 12px;
+}
+
+@media (max-width: 480px) {
+    .tab-title {
+        font-size: 20px;
+    }
+}
+
 @media (max-width: 768px) {
     .app {
         flex-direction: column;
@@ -542,6 +675,14 @@ img {
         display: flex;
     }
 
+    .timer-expire {
+        display: none;
+    }
+
+    .sidebar:hover .timer-expire {
+        display: block;
+    }
+
     .sidebar h2 {
         margin: 0;
         font-size: 12px;
@@ -561,23 +702,4 @@ img {
     .sidebar .logout-container {
         display: none;
     }
-}
-
-.main {
-    flex: 1;
-    padding: 20px;
-    overflow-y: auto;
-    display: none;
-}
-
-.tip-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.tip-gray {
-    padding-left: 25px;
-    color: #ccc5;
-    text-align: end;
 }

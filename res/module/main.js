@@ -31,6 +31,7 @@ const main = (async () => {
     const sideBar = document.querySelector('.sidebar');
     const appElement = document.querySelector('.app');
     const mainElement = document.querySelector('.main');
+    const mainTitle = document.querySelector('.main-title');
     const categoryList = document.getElementById('categoryList');
     const categoryAll = document.querySelector('.categoryAll');
     const addNewArticle = document.querySelector('.addNewArticle');
@@ -158,7 +159,7 @@ const main = (async () => {
             mainElement.style.display = 'block';
             const setMainPages = (key) => {
                 Array.from(mainElement.children).forEach((mainChild, index) => {
-                    if (index === 0 || index === 3) return;
+                    if (index === 0) return;
                     mainChild.style.display = 'none';
                 });
                 switch (key) {
@@ -184,8 +185,9 @@ const main = (async () => {
     });
     async function expirationTime(user) {
         const timer = document.createElement('p');
+        timer.className = 'timer-expire';
         timer.textContent = new Date(Date.parse((await user.getIdTokenResult()).expirationTime)).toLocaleString() + ' 過期';
-        mainElement.insertBefore(timer, mainElement.children[3]);
+        sideBar.appendChild(timer);
     }
 
     function createLogin() {
@@ -1794,7 +1796,88 @@ const main = (async () => {
             console.log('save temp');
         }
     }
+    function createEntryTabs(items, container, category, isAll) {
+        const categoryTitles = document.querySelectorAll('.category-title');
+        categoryTitles.forEach(categoryTitle => {
+            categoryTitle.style.display = 'none';
+        })
+        mainTitle.textContent = category;
+        items.forEach((item, index) => {
+            const tab = document.createElement('div');
+            if (isAll) {
+                tab.className = 'tab max-width';
+            } else {
+                tab.className = 'tab';
+            }
+            tab.addEventListener('click', () => {
+                categoryTitles.forEach(categoryTitle => {
+                    if (categoryTitle.textContent.includes(category)) {
+                        categoryTitle.style.display = '';
+                    }
+                })
+                container.querySelectorAll('.tab').forEach(tab => {
+                    tab.remove();
+                });
+                createEntryUI(item, container, true, index, category);
+                const backButton = document.createElement('button');
+                backButton.className = 'tab-back-button';
+                backButton.textContent = '返回';
+                backButton.addEventListener('click', () => {
+                    categoryTitles.forEach(categoryTitle => {
+                        categoryTitle.style.display = 'none';
+                    })
+                    container.querySelectorAll('.entry').forEach(tab => {
+                        tab.remove();
+                    });
+                    if (isAll) {
+                        Object.entries(data).forEach(async ([category, items]) => {
+                            createEntryTabs(items, container, category, isAll);
+                        });
+                    } else {
+                        createEntryTabs(items, container, category, isAll);
+                    }
+                    backButton.remove();
+                });
+                mainTitle.appendChild(backButton);
+            });
+            container.appendChild(tab);
 
+            const tabTitle = document.createElement('div');
+            tabTitle.className = 'tab-title';
+            tabTitle.textContent = item.title;
+            tab.appendChild(tabTitle);
+
+            const tabSummary = document.createElement('div');
+            tabSummary.className = 'tab-summary';
+            tabSummary.textContent = item.summary;
+            tab.appendChild(tabSummary);
+
+            const tabBottom = document.createElement('div');
+            tabBottom.className = 'tab-bottom';
+            tab.appendChild(tabBottom);
+
+            const tabLikes = document.createElement('div');
+            tabLikes.className = 'tab-likes';
+            tabLikes.innerHTML = item.likes > 0 ? `${item.likes} <span>♥</span>` : `- <span>♡</span>`;
+            tabBottom.appendChild(tabLikes);
+
+            if (item.allowcomments) {
+                const tabCommentCount = document.createElement('div');
+                tabCommentCount.className = 'tab-comment-count';
+                if (item.comments) {
+                    tabCommentCount.innerHTML = `${Object.keys(item.comments).length} <span>💬</span>`;
+                } else {
+                    tabCommentCount.innerHTML = '- <span>💬</span>';
+                }
+                tabBottom.appendChild(tabCommentCount);
+            }
+
+            const tabDate = document.createElement('div');
+            tabDate.className = 'tab-date'
+            tabDate.textContent = new Date(Number(item.date)).toLocaleString();
+            tabBottom.appendChild(tabDate);
+        });
+    }
 
 
 
@@ -1803,7 +1886,7 @@ const main = (async () => {
     //#region 設定初始按鈕
     const setMainPages = (key) => {
         Array.from(mainElement.children).forEach((mainChild, index) => {
-            if (index === 0 || index === 3) return;
+            if (index === 0) return;
             mainChild.style.display = 'none';
         });
         switch (key) {
@@ -1825,11 +1908,13 @@ const main = (async () => {
         }
     }
     addNewArticle.addEventListener('click', (e) => {
+        mainTitle.textContent = addNewArticle.textContent;
         document.querySelectorAll('.sidebar li').forEach(li => li.classList.remove('active'));
         e.target.classList.add('active');
         setMainPages('manualEditor');
     });
     tempArticle.addEventListener('click', async (e) => {
+        mainTitle.textContent = tempArticle.textContent;
         tempEditor.innerHTML = '';
         document.querySelectorAll('.sidebar li').forEach(li => li.classList.remove('active'));
         e.target.classList.add('active');
@@ -1848,6 +1933,7 @@ const main = (async () => {
         }
     });
     settings.addEventListener('click', (e) => {
+        mainTitle.textContent = settings.textContent;
         document.querySelectorAll('.sidebar li').forEach(li => li.classList.remove('active'));
         e.target.classList.add('active');
         setMainPages('profileContainer');
@@ -1871,7 +1957,7 @@ const main = (async () => {
 
         const setMainPages = (key) => {
             Array.from(mainElement.children).forEach((mainChild, index) => {
-                if (index === 0 || index === 3) return;
+                if (index === 0) return;
                 mainChild.style.display = 'none';
             });
             switch (key) {
@@ -1929,6 +2015,7 @@ const main = (async () => {
                         if (categorySelector.value !== category && categorySelector.value !== '全部分類') return;
 
                         const categoryTitle = document.createElement('h3');
+                        categoryTitle.className = 'category-title';
                         categoryTitle.textContent = `主要分類：${category}`;
                         dbEditor.appendChild(categoryTitle);
 
@@ -1939,6 +2026,7 @@ const main = (async () => {
                         if (categorySelector.value !== category && categorySelector.value !== '全部分類') return;
 
                         const categoryTitle = document.createElement('h3');
+                        categoryTitle.className = 'category-title';
                         categoryTitle.textContent = `主要分類：${category}`;
                         dbEditor.appendChild(categoryTitle);
                         items.forEach((item, index) => {
@@ -1967,6 +2055,7 @@ const main = (async () => {
                         if (categorySelector.value !== category && categorySelector.value !== '全部分類') return;
 
                         const categoryTitle = document.createElement('h3');
+                        categoryTitle.className = 'category-title';
                         categoryTitle.textContent = `主要分類：${category}`;
                         dbEditor.appendChild(categoryTitle);
 
@@ -1977,6 +2066,7 @@ const main = (async () => {
                         if (categorySelector.value !== category && categorySelector.value !== '全部分類') return;
 
                         const categoryTitle = document.createElement('h3');
+                        categoryTitle.className = 'category-title';
                         categoryTitle.textContent = `主要分類：${category}`;
                         dbEditor.appendChild(categoryTitle);
                         items.forEach((item, index) => {
@@ -1993,6 +2083,7 @@ const main = (async () => {
             if (lastCategory) {
                 if (lastCategory === category) {
                     const categoryTitle = document.createElement('h3');
+                    categoryTitle.className = 'category-title';
                     categoryTitle.textContent = `主要分類：${category}`;
                     dbEditor.appendChild(categoryTitle);
 
@@ -2007,6 +2098,7 @@ const main = (async () => {
                 categorySelector.appendChild(categoryOption);
 
                 const categoryTitle = document.createElement('h3');
+                categoryTitle.className = 'category-title';
                 categoryTitle.textContent = `主要分類：${category}`;
                 dbEditor.appendChild(categoryTitle);
 
@@ -2036,11 +2128,13 @@ const main = (async () => {
                 lastCategory = category;
 
                 const categoryTitle = document.createElement('h3');
+                categoryTitle.className = 'category-title';
                 categoryTitle.textContent = `主要分類：${category}`;
                 dbEditor.appendChild(categoryTitle);
-                items.forEach((item, index) => {
-                    createEntryUI(item, dbEditor, true, index, category);
-                });
+                // items.forEach((item, index) => {
+                //     createEntryUI(item, dbEditor, true, index, category);
+                // });
+                createEntryTabs(items, dbEditor, category, false);
                 setMainPages('dbEditor');
             });
             categoryList.appendChild(categoryListItem);
@@ -2056,6 +2150,7 @@ const main = (async () => {
         categoryAll.querySelector('.tip-gray')?.remove();
         categoryAll.innerHTML += `<span class="tip-gray">${totalItemsLength}</span>`;
         categoryAll.addEventListener('click', (e) => {
+            mainTitle.textContent = "全部文章";
             document.querySelectorAll('.sidebar li').forEach(li => li.classList.remove('active'));
             e.target.classList.add('active');
             dbEditor.innerHTML = '';
@@ -2063,11 +2158,13 @@ const main = (async () => {
 
             Object.entries(data).forEach(async ([category, items]) => {
                 const categoryTitle = document.createElement('h3');
+                categoryTitle.className = 'category-title';
                 categoryTitle.textContent = `主要分類：${category}`;
                 dbEditor.appendChild(categoryTitle);
-                items.forEach((item, index) => {
-                    createEntryUI(item, dbEditor, true, index, category);
-                });
+                // items.forEach((item, index) => {
+                //     createEntryUI(item, dbEditor, true, index, category);
+                // });
+                createEntryTabs(items, dbEditor, category, true);
             });
             setMainPages('dbEditor');
         });
