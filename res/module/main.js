@@ -226,6 +226,9 @@ const main = (async () => {
         const usernameInput = document.createElement('input');
         usernameInput.type = 'text';
         usernameInput.placeholder = '輸入帳號';
+        usernameInput.addEventListener('input', () => {
+            usernameInput.classList.remove('error');
+        });
         loginPanel.appendChild(usernameInput);
 
         const passwordLabel = document.createElement('label');
@@ -235,7 +238,15 @@ const main = (async () => {
         const passwordInput = document.createElement('input');
         passwordInput.type = 'password';
         passwordInput.placeholder = '輸入密碼';
+        passwordInput.addEventListener('input', () => {
+            passwordInput.classList.remove('error');
+        });
         loginPanel.appendChild(passwordInput);
+
+        const errorInfo = document.createElement('div');
+        errorInfo.className = 'error-info'
+        errorInfo.textContent = '帳號或密碼輸入錯誤';
+        loginPanel.appendChild(errorInfo);
 
         const loginStatus = document.createElement('div');
         loginStatus.className = 'login-status';
@@ -257,6 +268,7 @@ const main = (async () => {
         loginPanel.appendChild(button);
 
         button.onclick = async () => {
+            errorInfo.style.opacity = '';
             const email = usernameInput.value;
             const password = passwordInput.value;
             if (title.textContent === '登入') {
@@ -270,6 +282,9 @@ const main = (async () => {
                     .catch((error) => {
                         const errorCode = error.code;
                         console.log(errorCode);
+                        usernameInput.classList.add('error');
+                        passwordInput.classList.add('error');
+                        errorInfo.style.opacity = '1';
                     });
             } else {
                 isCreateAccount = true;
@@ -299,6 +314,9 @@ const main = (async () => {
                     location.reload();
                 } catch (e) {
                     console.log(e);
+                    usernameInput.classList.add('error');
+                    passwordInput.classList.add('error');
+                    errorInfo.style.opacity = '1';
                 }
             }
         };
