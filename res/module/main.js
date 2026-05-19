@@ -8,8 +8,8 @@ import timer from "./timer.js";
 import dagreUtils from "./dagre.utils.js";
 
 const main = (async () => {
-    const domain = "https://www.noteest.com/note"
-    const domainOrigin = "https://www.noteest.com/"
+    const domain = "https://noteest.com/note"
+    const domainOrigin = "https://noteest.com/"
 
     function setRealHeight() {
         document.documentElement.style.setProperty('--vh', window.innerHeight * 0.01 + 'px');
