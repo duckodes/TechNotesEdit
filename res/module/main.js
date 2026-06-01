@@ -58,6 +58,7 @@ const main = (async () => {
         data = techNotes.val();
     }
 
+    let idToken;
     let userName;
     let isCreateAccount = false;
 
@@ -111,6 +112,7 @@ const main = (async () => {
         if (!user) {
             createLogin();
         } else {
+            idToken = await user.getIdToken();
             if (isCreateAccount) return;
             userName = (await get(ref(database, `technotes/user/${auth.currentUser.uid}/name`))).val();
             await updateData();
@@ -2386,7 +2388,7 @@ const main = (async () => {
         container.className = 'profile-container';
 
         const title = document.createElement('h3');
-        title.innerHTML = `個人資訊 <a href="${domain}/?user=${dataName}&timeline=true&info=true" style="font-size: 12px;color: #000;" target="_blank">發佈連結</a>`;
+        title.innerHTML = `個人資訊 <a href="${domain}/?user=${dataName}&timeline=true&info=true&idToken=${idToken}" style="font-size: 12px;color: #000;" target="_blank">發佈連結</a>`;
         container.appendChild(title);
 
         const status = document.createElement('p');
