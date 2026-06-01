@@ -1750,7 +1750,7 @@ const main = (async () => {
                     replyContainer.appendChild(deleteButton);
                     commentsElement.appendChild(replyContainer);
 
-                    await push(ref(database, `technotes/data/${auth.currentUser.uid}/${category}/${index}/comments/${key}/replies`), { name: userName, message: replyMessage, nameColor: 'var(--accent)' });
+                    await push(ref(database, `technotes/data/${auth.currentUser.uid}/${category}/${index}/comments/${key}/replies`), { name: userName, message: replyMessage, nameColor: 'var(--accent)', uid: auth.currentUser.uid });
 
                     replyForm.reset();
                     replyForm.style.display = 'none';
@@ -2386,7 +2386,7 @@ const main = (async () => {
         container.className = 'profile-container';
 
         const title = document.createElement('h3');
-        title.innerHTML = `個人資訊 <a href="${domain}/?user=${dataName}" style="font-size: 12px;color: #000;" target="_blank">發佈連結</a>`;
+        title.innerHTML = `個人資訊 <a href="${domain}/?user=${dataName}&timeline=true&info=true" style="font-size: 12px;color: #000;" target="_blank">發佈連結</a>`;
         container.appendChild(title);
 
         const status = document.createElement('p');
