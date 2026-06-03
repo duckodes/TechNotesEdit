@@ -217,9 +217,18 @@ const main = (async () => {
         loginPanel.className = 'login-panel';
         container.appendChild(loginPanel);
 
+        const topContainer = document.createElement('div');
+        topContainer.className = 'login-top-container';
+        loginPanel.appendChild(topContainer);
+
         const title = document.createElement('h3');
         title.textContent = '登入';
-        loginPanel.appendChild(title);
+        topContainer.appendChild(title);
+
+        const loginStatus = document.createElement('div');
+        loginStatus.className = 'login-status';
+        loginStatus.textContent = '尚未加入?';
+        topContainer.appendChild(loginStatus);
 
         const usernameLabel = document.createElement('label');
         usernameLabel.textContent = '帳號';
@@ -250,14 +259,11 @@ const main = (async () => {
         errorInfo.textContent = '帳號或密碼輸入錯誤';
         loginPanel.appendChild(errorInfo);
 
-        const loginStatus = document.createElement('div');
-        loginStatus.className = 'login-status';
-        loginStatus.textContent = '註冊';
         const button = document.createElement('button');
         button.textContent = '登入';
         loginStatus.onclick = () => {
             if (loginStatus.textContent === '登入') {
-                loginStatus.textContent = '註冊';
+                loginStatus.textContent = '尚未加入?';
                 title.textContent = '登入';
                 button.textContent = '登入';
             } else {
@@ -266,7 +272,6 @@ const main = (async () => {
                 button.textContent = '註冊';
             }
         };
-        loginPanel.appendChild(loginStatus);
         loginPanel.appendChild(button);
 
         button.onclick = async () => {
@@ -341,55 +346,8 @@ const main = (async () => {
         const signInGoogleButton = document.createElement('div');
         signInGoogleButton.className = 'sign-google';
         signInGoogleButton.innerHTML =
-            `<svg width="46" height="46" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-            <defs>
-              <rect id="b" x="0" y="0" width="40" height="40" rx="2"></rect>
-              <rect id="c" x="5" y="5" width="38" height="38" rx="1"></rect>
-              <filter x="-50%" y="-50%" width="200%" height="200%" filterUnits="objectBoundingBox" id="a">
-                <feOffset dy="1" in="SourceAlpha" result="shadowOffsetOuter1"></feOffset>
-                <feGaussianBlur stdDeviation="0.5" in="shadowOffsetOuter1" result="shadowBlurOuter1"></feGaussianBlur>
-                <feColorMatrix values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.168 0" in="shadowBlurOuter1"
-                  result="shadowMatrixOuter1"></feColorMatrix>
-                <feOffset in="SourceAlpha" result="shadowOffsetOuter2"></feOffset>
-                <feGaussianBlur stdDeviation="0.5" in="shadowOffsetOuter2" result="shadowBlurOuter2"></feGaussianBlur>
-                <feColorMatrix values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.084 0" in="shadowBlurOuter2"
-                  result="shadowMatrixOuter2"></feColorMatrix>
-                <feMerge>
-                  <feMergeNode in="shadowMatrixOuter1"></feMergeNode>
-                  <feMergeNode in="shadowMatrixOuter2"></feMergeNode>
-                  <feMergeNode in="SourceGraphic"></feMergeNode>
-                </feMerge>
-              </filter>
-            </defs>
-            <g fill="none" fill-rule="evenodd">
-              <g transform="translate(3 3)" filter="url(#a)">
-                <use fill="#4285F4" xlink:href="#b"></use>
-                <use xlink:href="#b"></use>
-                <use xlink:href="#b"></use>
-                <use xlink:href="#b"></use>
-              </g>
-              <g transform="translate(-1 -1)">
-                <use fill="#FFF" xlink:href="#c"></use>
-                <use xlink:href="#c"></use>
-                <use xlink:href="#c"></use>
-                <use xlink:href="#c"></use>
-              </g>
-              <path
-                d="M31.64 23.205c0-.639-.057-1.252-.164-1.841H23v3.481h4.844a4.14 4.14 0 01-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"
-                fill="#4285F4"></path>
-              <path
-                d="M23 32c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711h-3.007v2.332A8.997 8.997 0 0023 32z"
-                fill="#34A853"></path>
-              <path
-                d="M17.964 24.71a5.41 5.41 0 01-.282-1.71c0-.593.102-1.17.282-1.71v-2.332h-3.007A8.996 8.996 0 0014 23c0 1.452.348 2.827.957 4.042l3.007-2.332z"
-                fill="#FBBC05"></path>
-              <path
-                d="M23 17.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C27.463 14.891 25.426 14 23 14a8.997 8.997 0 00-8.043 4.958l3.007 2.332c.708-2.127 2.692-3.71 5.036-3.71z"
-                fill="#EA4335"></path>
-              <path d="M14 14h18v18H14V14z"></path>
-            </g>
-          </svg>
-          &emsp;Sign in with google`;
+            `<img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAACrUlEQVR4AaSRA4wdURhGJ3bNsDEbdG3bthHUtm3btm3bRrDmU/E8+Pr3ppnczHr3JOf5nW8gdAYALmQxOeO/RaSL0BMA9CWXk9VomypyCdm3q/FcUo/OoyOzOhtfRiroOgq5qKP4JGiQTQZYDu6Gaeoo6POSoM+IgWlMCSz7t0PWNaEVxrYV9yJFcNgun4MhMxb65HAyDLrEEDIYugQyPgi6pDBYL56GBpF0b23gITgsh/ZAnxKuxvVJodoB9mx/eBetcE8b9wOH88Mb6FMj1AHjqCLY79yAVFsFqboStptXYSzP0ca1ePMDa8BhO5EEQ3YMi/+cOR6K3YZusIIfeEUyFPMXiPeHwnFuGEyjkiA1NaKbvOAHGtSBxhM0MIQpvU+DlvhVFsT+c6UFMWT0CjOiyOjlZlgdCjjq+AE7yZBrNlN8MFP+Ph5a4lrESYpHkvrfCjjs/EA91DM4DvHeIKbjfUrLAU2cZPGIZWY4RLR+BoqicPfgE8UHwPBoOMouZqDB0oy2qDPJ6tHnbbGAh5rP1QFZlleC4/HTDESdyULA6VyMvr8QVtEOLaIEzDlpU49+0w0HeKi5TB0QRdEbHK+aPiLgVB78T+WSOci5NglXKh+g8ncd6s3NuFPzDONu7kXESh2LR680o96kgMfpdHoKPJIk3QfH9o/HWNzvVDbT9yQTPiezmN4nM+ksRyFy/Recf+UED7XuClqsVqsHXTcRHCd+XEPw6YIWYeaJTHYAx7/f0l570WKxuAmtQac1Fhr0VhO2fTyK0lszEXm+FEE0mHd9Mja9P4QGiw5aqDFaaA+Hw7FQIdBFFIL+O1/oDHS5MiVZbkYnkSS5meLpQlcwGo296U+L6IZVthmm7/4O5GOQWgZKwPv37w2/f/8eDzSsDIRBbKCYAcNgAAAOVZyeob0MrwAAAABJRU5ErkJggg==">
+<div class="google-sign-text">使用 Google 登入</div>`;
         signInGoogleButton.addEventListener("click", userSignInGoogle);
         loginPanel.appendChild(signInGoogleButton);
     }
